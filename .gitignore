@@ -1,0 +1,17 @@
+# 환경 변수 파일
+.env
+
+# 데이터베이스
+*.db
+*.db-journal
+
+# Node modules
+node_modules/
+
+# 로그 파일
+*.log
+npm-debug.log*
+
+# OS 파일
+.DS_Store
+Thumbs.db

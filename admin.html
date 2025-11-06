@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;">
+    <title>가게 관리자 페이지</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Pretendard", "Spoqa Han Sans Neo", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #333;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 600;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background: #f5f7fa;
+            transition: background 0.2s ease;
+        }
+
+        tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        tr:nth-child(even):hover {
+            background: #f0f4f8;
+        }
+
+        td {
+            max-width: 200px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        /* 컬럼별 최적 너비 */
+        th:nth-child(1), td:nth-child(1) { /* ID */
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+
+        th:nth-child(2), td:nth-child(2) { /* 가게명 */
+            width: 150px;
+            min-width: 150px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        th:nth-child(3), td:nth-child(3) { /* 사용자 */
+            width: 120px;
+            min-width: 120px;
+        }
+
+        th:nth-child(4), td:nth-child(4) { /* 도로명 주소 */
+            width: 200px;
+            min-width: 200px;
+        }
+
+        th:nth-child(5), td:nth-child(5) { /* 지번 주소 */
+            width: 180px;
+            min-width: 180px;
+        }
+
+        th:nth-child(6), td:nth-child(6) { /* 전화번호 */
+            width: 130px;
+            min-width: 130px;
+        }
+
+        th:nth-child(7), td:nth-child(7) { /* 이메일 */
+            width: 180px;
+            min-width: 180px;
+        }
+
+        th:nth-child(8), td:nth-child(8) { /* 카테고리 */
+            width: 150px;
+            min-width: 150px;
+        }
+
+        th:nth-child(9), td:nth-child(9) { /* 설명 */
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        th:nth-child(10), td:nth-child(10) { /* 생성일 */
+            width: 120px;
+            min-width: 120px;
+            font-size: 0.85rem;
+        }
+
+        th:nth-child(11), td:nth-child(11) { /* 작업 */
+            width: 150px;
+            min-width: 150px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 3001;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 5px 10px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.active {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            color: #667eea;
+            background: #f5f7fa;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 가게 관리자 페이지</h1>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-secondary">지도 보기</a>
+                <button class="btn btn-secondary" onclick="openUserInfoModal()">내 정보</button>
+                <button class="btn btn-primary" onclick="openAddModal()">+ 가게 추가</button>
+            </div>
+        </div>
+
+        <div class="alert" id="alert"></div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('stores', event)">🏪 가게 관리</button>
+            <button class="tab" onclick="switchTab('users', event)">👥 회원 관리</button>
+        </div>
+
+        <!-- 가게 관리 탭 -->
+        <div id="storesTab" class="tab-content active">
+            <div class="search-bar">
+                <input type="text" class="search-input" id="searchInput" placeholder="가게명, 주소, 전화번호, 이메일, 카테고리로 검색..." oninput="filterStores()" autocomplete="off">
+            </div>
+
+            <div class="table-container">
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div>로딩 중...</div>
+                </div>
+                <table id="storesTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>가게명</th>
+                            <th>사용자(이름)</th>
+                            <th>사용자(아이디)</th>
+                            <th>도로명 주소</th>
+                            <th>지번 주소</th>
+                            <th>전화번호</th>
+                            <th>이메일</th>
+                            <th>카테고리</th>
+                            <th>설명</th>
+                            <th>생성일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storesTableBody">
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <h3>등록된 가게가 없습니다</h3>
+                    <p>"+ 가게 추가" 버튼을 눌러 가게를 추가하세요.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 회원 관리 탭 -->
+        <div id="usersTab" class="tab-content">
+            <div class="search-bar">
+                <input type="text" class="search-input" id="userSearchInput" placeholder="아이디, 이메일로 검색..." oninput="filterUsers()" autocomplete="off">
+            </div>
+
+            <div class="table-container">
+                <div id="usersLoading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div>로딩 중...</div>
+                </div>
+                <table id="usersTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>이름</th>
+                            <th>아이디</th>
+                            <th>이메일</th>
+                            <th>보유 가게 수</th>
+                            <th>가게명</th>
+                            <th>임시 비밀번호</th>
+                            <th>가입일</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                    </tbody>
+                </table>
+                <div id="usersEmptyState" class="empty-state" style="display: none;">
+                    <h3>등록된 회원이 없습니다</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 가게 추가/수정 모달 -->
+    <div class="modal" id="storeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">가게 추가</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="storeForm" onsubmit="handleSubmit(event)" novalidate>
+                <input type="hidden" id="storeId">
+                <div id="userInfoSection" style="display: none;">
+                    <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">기본 정보</h3>
+                    <div class="form-group">
+                        <label>성명 *</label>
+                        <input type="text" id="storeUserName" placeholder="성명을 입력하세요" autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label>아이디 *</label>
+                        <input type="text" id="storeUsername" placeholder="3자 이상 입력하세요" minlength="3" autocomplete="username">
+                    </div>
+                    <div class="form-group" id="storePasswordSection">
+                        <label>비밀번호 *</label>
+                        <input type="password" id="storePassword" placeholder="4자 이상 입력하세요" minlength="4" autocomplete="new-password">
+                    </div>
+                    <div class="form-group" id="storePasswordConfirmSection">
+                        <label>비밀번호 확인 *</label>
+                        <input type="password" id="storePasswordConfirm" placeholder="비밀번호를 다시 입력하세요" autocomplete="new-password">
+                    </div>
+                </div>
+                
+                <h3 id="storeInfoSection" style="color: #333; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">가게 정보</h3>
+                <div class="form-group">
+                    <label>상호 *</label>
+                    <input type="text" id="storeStoreName" required placeholder="매장 상호명을 입력하세요" autocomplete="organization">
+                </div>
+                <div class="form-group">
+                    <label>분류 *</label>
+                    <select id="storeCategory" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background: white; color: #333;" required>
+                        <option value="">선택하세요</option>
+                        <option value="PC, 노트북 , 게임">PC, 노트북 , 게임</option>
+                        <option value="가전, 휴대폰">가전, 휴대폰</option>
+                        <option value="패션 , 잡화">패션 , 잡화</option>
+                        <option value="피부,헤어, 미용, 화장품">피부,헤어, 미용, 화장품</option>
+                        <option value="건설, 인테리어, 부동산">건설, 인테리어, 부동산</option>
+                        <option value="외식업, 까페">외식업, 까페</option>
+                        <option value="자동차 관련">자동차 관련</option>
+                        <option value="여행 , 레져 , 도서">여행 , 레져 , 도서</option>
+                        <option value="숙박">숙박</option>
+                        <option value="기타">기타</option>
+                        <option value="의료관련">의료관련</option>
+                        <option value="법률행정 서비스">법률행정 서비스</option>
+                        <option value="사주, 운세, 작명, 타로">사주, 운세, 작명, 타로</option>
+                        <option value="스포츠 , 취미, 건강">스포츠 , 취미, 건강</option>
+                        <option value="식품, 건강식품등">식품, 건강식품등</option>
+                        <option value="사무기기">사무기기</option>
+                        <option value="제조">제조</option>
+                        <option value="반려견,묘 관련">반려견,묘 관련</option>
+                        <option value="교육">교육</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>주소 *</label>
+                    <input type="text" id="storeAddress" required placeholder="주소를 입력하세요 (예: 서울시 강남구 테헤란로 123 또는 서울시 강남구 역삼동 123-45)" autocomplete="street-address">
+                    <button type="button" class="btn btn-secondary" onclick="searchAddressForAdmin()" style="margin-top: 10px; width: 100%;">주소 검색</button>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <label>도로명 주소</label>
+                    <input type="text" id="storeRoadAddress" placeholder="도로명 주소를 입력하세요" autocomplete="address-line1">
+                </div>
+                <div class="form-group" style="display: none;">
+                    <label>지번 주소</label>
+                    <input type="text" id="storeLotAddress" placeholder="지번 주소를 입력하세요" autocomplete="address-line2">
+                </div>
+                <div class="form-group" style="display: none;">
+                    <label>위도 *</label>
+                    <input type="number" id="storeLatitude" step="any" placeholder="37.5665" autocomplete="off">
+                </div>
+                <div class="form-group" style="display: none;">
+                    <label>경도 *</label>
+                    <input type="number" id="storeLongitude" step="any" placeholder="126.9780" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>전화번호</label>
+                    <input type="tel" id="storePhone" placeholder="02-1234-5678" autocomplete="tel">
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="storeEmail" placeholder="example@email.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="storeDescription" placeholder="가게에 대한 설명을 입력하세요"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 내 정보 수정 모달 -->
+    <div class="modal" id="userInfoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>내 정보 수정</h2>
+                <button class="close-btn" onclick="closeUserInfoModal()">&times;</button>
+            </div>
+            <form id="userInfoForm" onsubmit="event.preventDefault(); handleUserInfoUpdate(event); return false;" novalidate>
+                <h3 style="color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">기본 정보</h3>
+                <div class="form-group">
+                    <label>성명</label>
+                    <input type="text" id="userInfoName" placeholder="성명을 입력하세요" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label>아이디</label>
+                    <input type="text" id="userInfoUsername" readonly style="background: #f5f5f5;" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="userInfoEmail" placeholder="비밀번호 분실 시 사용할 이메일을 입력하세요" autocomplete="email">
+                    <small style="color: #666; font-size: 0.85rem; margin-top: 5px; display: block;">비밀번호 분실 시 이 이메일로 임시 비밀번호가 전송됩니다.</small>
+                </div>
+                <div class="form-group">
+                    <label>현재 비밀번호</label>
+                    <input type="password" id="userInfoCurrentPassword" placeholder="비밀번호 변경 시 입력하세요" autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label>새 비밀번호</label>
+                    <input type="password" id="userInfoNewPassword" placeholder="4자 이상 입력하세요" minlength="4" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label>새 비밀번호 확인</label>
+                    <input type="password" id="userInfoNewPasswordConfirm" placeholder="새 비밀번호를 다시 입력하세요" autocomplete="new-password">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserInfoModal()">취소</button>
+                    <button type="button" id="saveUserInfoBtn" class="btn btn-primary" onclick="handleUserInfoUpdate(event)">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let stores = [];
+        let filteredStores = [];
+        let users = [];
+        let filteredUsers = [];
+        let editingId = null;
+        let currentTab = 'stores';
+
+        // 로그인 상태 확인
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (!result.success || !result.user) {
+                    // 로그인되지 않은 경우 index.html로 리다이렉트
+                    window.location.href = 'index.html';
+                    return false;
+                }
+                
+                // admin이 아닌 경우 index.html로 리다이렉트
+                if (result.user.username !== 'admin') {
+                    window.location.href = 'index.html';
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('로그인 상태 확인 오류:', error);
+                window.location.href = 'index.html';
+                return false;
+            }
+        }
+
+        // 탭 전환
+        function switchTab(tabName, event) {
+            currentTab = tabName;
+            
+            // 탭 버튼 활성화 상태 변경
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            if (event) {
+                event.target.classList.add('active');
+            } else {
+                // 이벤트가 없으면 tabName으로 찾기
+                document.querySelectorAll('.tab').forEach(tab => {
+                    if (tab.textContent.includes(tabName === 'stores' ? '가게' : '회원')) {
+                        tab.classList.add('active');
+                    }
+                });
+            }
+            
+            // 탭 콘텐츠 표시/숨김
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (tabName === 'stores') {
+                document.getElementById('storesTab').classList.add('active');
+            } else if (tabName === 'users') {
+                document.getElementById('usersTab').classList.add('active');
+                loadUsers();
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('load', async function() {
+            // 로딩 요소 초기화 (확실히 숨기기)
+            const loadingEl = document.getElementById('loading');
+            const usersLoadingEl = document.getElementById('usersLoading');
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (usersLoadingEl) usersLoadingEl.style.display = 'none';
+            
+            // 로그인 확인 후 가게 목록 로드
+            try {
+                const isAdmin = await checkAuth();
+                if (isAdmin) {
+                    loadStores();
+                } else {
+                    // 로그인 실패 시 로딩 숨기기
+                    if (loadingEl) loadingEl.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('페이지 초기화 오류:', error);
+                // 에러 발생 시에도 로딩 숨기기
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (usersLoadingEl) usersLoadingEl.style.display = 'none';
+            }
+        });
+
+        // 가게 목록 로드
+        async function loadStores() {
+            const loadingEl = document.getElementById('loading');
+            const tableEl = document.getElementById('storesTable');
+            const emptyStateEl = document.getElementById('emptyState');
+            
+            // 요소가 없으면 중단
+            if (!loadingEl || !tableEl || !emptyStateEl) {
+                console.error('필요한 DOM 요소를 찾을 수 없습니다.');
+                return;
+            }
+            
+            try {
+                loadingEl.style.display = 'flex';
+                tableEl.style.display = 'none';
+                emptyStateEl.style.display = 'none';
+
+                // 타임아웃 설정 (10초)
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('요청 시간이 초과되었습니다.')), 10000)
+                );
+                
+                const fetchPromise = fetch(`${API_BASE_URL}/stores`, {
+                    credentials: 'include'
+                });
+                const response = await Promise.race([fetchPromise, timeoutPromise]);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    stores = result.data || [];
+                    filteredStores = stores;
+                    displayStores(stores);
+                } else {
+                    showAlert('가게 목록을 불러오는데 실패했습니다: ' + (result.error || '알 수 없는 오류'), 'error');
+                    displayStores([]);
+                }
+            } catch (error) {
+                console.error('Error loading stores:', error);
+                const errorMsg = error.message === '요청 시간이 초과되었습니다.' 
+                    ? '서버 응답이 지연되고 있습니다. 서버 상태를 확인해주세요.'
+                    : '서버 연결에 실패했습니다. 서버가 실행 중인지 확인하세요.';
+                showAlert(errorMsg, 'error');
+                displayStores([]);
+            } finally {
+                // 확실히 로딩 숨기기
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                }
+            }
+        }
+
+        // 가게 목록 표시
+        function displayStores(storeList) {
+            const tbody = document.getElementById('storesTableBody');
+            const table = document.getElementById('storesTable');
+            const emptyState = document.getElementById('emptyState');
+            const loadingEl = document.getElementById('loading');
+
+            // 로딩 확실히 숨기기
+            loadingEl.style.display = 'none';
+
+            if (!storeList || storeList.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = storeList.map(store => `
+                <tr ${!store.user_id ? 'style="background-color: #fff8e1; border-left: 4px solid #ffc107;"' : ''}>
+                    <td style="text-align: center; font-weight: 600; color: #667eea;">${store.id}</td>
+                    <td><strong style="color: #667eea;">${escapeHtml(store.name)}</strong></td>
+                    <td>
+                        ${store.user_name ? '<span style="color: #1976d2; font-weight: 600;">' + escapeHtml(store.user_name) + '</span>' : '<span style="color: #999;">-</span>'}
+                    </td>
+                    <td>
+                        ${store.user_username ? '<span style="color: #28a745; font-weight: 600;">' + escapeHtml(store.user_username) + '</span>' : '<span style="color: #dc3545; font-weight: bold; background: #fff3cd; padding: 4px 8px; border-radius: 4px;">없음</span>'}
+                    </td>
+                    <td style="font-size: 0.9rem;">${store.road_address ? escapeHtml(store.road_address) : '<span style="color: #999;">-</span>'}</td>
+                    <td style="font-size: 0.9rem; color: #666;">${store.lot_address ? escapeHtml(store.lot_address) : '<span style="color: #999;">-</span>'}</td>
+                    <td>${store.phone ? escapeHtml(store.phone) : '<span style="color: #999;">-</span>'}</td>
+                    <td style="font-size: 0.85rem;">${store.email ? escapeHtml(store.email) : '<span style="color: #999;">-</span>'}</td>
+                    <td><span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500;">${store.category ? escapeHtml(store.category) : '-'}</span></td>
+                    <td style="font-size: 0.85rem; color: #666;" title="${store.description ? escapeHtml(store.description) : ''}">${store.description ? escapeHtml(store.description.substring(0, 30)) + (store.description.length > 30 ? '...' : '') : '<span style="color: #999;">-</span>'}</td>
+                    <td style="font-size: 0.85rem; color: #666;">${formatDate(store.created_at)}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-warning btn-sm" onclick="editStore(${store.id})" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">수정</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteStore(${store.id})" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">삭제</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 검색 필터
+        function filterStores() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            filteredStores = stores.filter(store => 
+                store.name.toLowerCase().includes(searchTerm) ||
+                (store.address && store.address.toLowerCase().includes(searchTerm)) ||
+                (store.road_address && store.road_address.toLowerCase().includes(searchTerm)) ||
+                (store.lot_address && store.lot_address.toLowerCase().includes(searchTerm)) ||
+                (store.phone && store.phone.toLowerCase().includes(searchTerm)) ||
+                (store.email && store.email.toLowerCase().includes(searchTerm)) ||
+                (store.category && store.category.toLowerCase().includes(searchTerm)) ||
+                (store.description && store.description.toLowerCase().includes(searchTerm))
+            );
+            displayStores(filteredStores);
+        }
+
+        // 가게 추가 모달 열기
+        function openAddModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = '가게 추가';
+            document.getElementById('storeForm').reset();
+            document.getElementById('storeId').value = '';
+            // 가게 추가 시 아이디/비밀번호 필드 표시
+            document.getElementById('userInfoSection').style.display = 'block';
+            document.getElementById('storeInfoSection').style.marginTop = '30px';
+            // 성명 필드 초기화
+            document.getElementById('storeUserName').value = '';
+            // 아이디 필드 초기화 및 활성화
+            document.getElementById('storeUsername').value = '';
+            document.getElementById('storeUsername').readOnly = false;
+            document.getElementById('storeUsername').style.background = '';
+            document.getElementById('storeUsername').required = true;
+            // 비밀번호 필드 표시
+            document.getElementById('storePasswordSection').style.display = 'block';
+            document.getElementById('storePasswordConfirmSection').style.display = 'block';
+            document.getElementById('storePassword').required = true;
+            document.getElementById('storePasswordConfirm').required = true;
+            document.getElementById('storeModal').classList.add('active');
+        }
+
+        // 가게 수정
+        async function editStore(id) {
+            try {
+                // 먼저 가게 목록에서 정보 가져오기 (이미 로드된 데이터 사용)
+                const storeFromList = stores.find(s => s.id === id);
+                
+                // API로도 가져오기 (최신 정보)
+                const response = await fetch(`${API_BASE_URL}/stores/${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const store = result.data;
+                    console.log('가게 정보 (API):', store);
+                    console.log('사용자 정보:', {
+                        user_id: store.user_id,
+                        user_username: store.user_username,
+                        user_name: store.user_name
+                    });
+                    
+                    // 가게 목록에서 가져온 정보와 병합 (목록에 있으면 우선 사용)
+                    if (storeFromList) {
+                        console.log('가게 정보 (목록):', storeFromList);
+                        if (storeFromList.user_username && !store.user_username) {
+                            store.user_username = storeFromList.user_username;
+                        }
+                        if (storeFromList.user_name && !store.user_name) {
+                            store.user_name = storeFromList.user_name;
+                        }
+                    }
+                    
+                    editingId = id;
+                    document.getElementById('modalTitle').textContent = '가게 수정';
+                    document.getElementById('storeId').value = store.id;
+                    // 가게 수정 시 사용자 정보 섹션 표시 (성명만 수정 가능)
+                    document.getElementById('userInfoSection').style.display = 'block';
+                    document.getElementById('storeInfoSection').style.marginTop = '30px';
+                    // 성명 필드 설정
+                    document.getElementById('storeUserName').value = store.user_name || '';
+                    document.getElementById('storeUserName').dataset.originalName = store.user_name || '';
+                    // 아이디는 readonly로 설정
+                    const usernameInput = document.getElementById('storeUsername');
+                    if (usernameInput) {
+                        const usernameValue = store.user_username || storeFromList?.user_username || '(사용자 없음)';
+                        usernameInput.value = usernameValue;
+                        usernameInput.readOnly = true;
+                        usernameInput.style.background = '#f5f5f5';
+                        usernameInput.required = false;
+                        if (!store.user_username && !storeFromList?.user_username) {
+                            usernameInput.style.color = '#999';
+                        } else {
+                            usernameInput.style.color = '#333';
+                        }
+                        console.log('아이디 필드 설정:', usernameValue);
+                    }
+                    // 비밀번호 필드는 숨김
+                    document.getElementById('storePasswordSection').style.display = 'none';
+                    document.getElementById('storePasswordConfirmSection').style.display = 'none';
+                    document.getElementById('storePassword').required = false;
+                    document.getElementById('storePasswordConfirm').required = false;
+                    // 가게 정보 설정
+                    document.getElementById('storeStoreName').value = store.name;
+                    // 주소 입력칸에는 도로명 주소 우선, 없으면 표시용 주소
+                    document.getElementById('storeAddress').value = store.road_address || store.address || '';
+                    // 숨겨진 필드에 도로명/지번 주소 저장
+                    document.getElementById('storeRoadAddress').value = store.road_address || '';
+                    document.getElementById('storeLotAddress').value = store.lot_address || '';
+                    document.getElementById('storeLatitude').value = store.latitude;
+                    document.getElementById('storeLongitude').value = store.longitude;
+                    document.getElementById('storePhone').value = store.phone || '';
+                    document.getElementById('storeEmail').value = store.email || '';
+                    // 카테고리 드롭다운 선택
+                    const categorySelect = document.getElementById('storeCategory');
+                    if (categorySelect) {
+                        categorySelect.value = store.category || '';
+                    }
+                    document.getElementById('storeDescription').value = store.description || '';
+                    document.getElementById('storeModal').classList.add('active');
+                } else {
+                    showAlert('가게 정보를 불러오는데 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading store:', error);
+                showAlert('서버 연결에 실패했습니다.', 'error');
+            }
+        }
+
+        // 가게 삭제
+        async function deleteStore(id) {
+            const store = stores.find(s => s.id === id);
+            if (!store) {
+                showAlert('가게 정보를 찾을 수 없습니다.', 'error');
+                return;
+            }
+            
+            if (!confirm(`정말 "${store.name}" 가게를 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                console.log('가게 삭제 시도:', { id, storeName: store.name, storeUserId: store.user_id });
+                const response = await fetch(`${API_BASE_URL}/stores/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Page': 'true'  // admin 페이지에서 온 요청임을 표시
+                    }
+                });
+                
+                const result = await response.json();
+                console.log('가게 삭제 응답:', result);
+                
+                if (result.success) {
+                    showAlert('가게가 삭제되었습니다.', 'success');
+                    await loadStores();
+                } else {
+                    showAlert(result.error || '가게 삭제에 실패했습니다.', 'error');
+                    console.error('가게 삭제 실패:', result);
+                }
+            } catch (error) {
+                console.error('Error deleting store:', error);
+                showAlert('서버 연결에 실패했습니다.', 'error');
+            }
+        }
+
+        // 주소 검색 (admin.html용)
+        async function searchAddressForAdmin() {
+            const addressInput = document.getElementById('storeAddress');
+            const address = addressInput.value.trim();
+            
+            if (!address) {
+                showAlert('주소를 입력해주세요.', 'error');
+                return;
+            }
+            
+            try {
+                showAlert('주소 검색 중...', 'success');
+                
+                // Kakao Geocoding API 사용
+                const response = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`, {
+                    headers: {
+                        'Authorization': 'KakaoAK 45eec593e01b22661676cb8c7f76d070'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.documents && result.documents.length > 0) {
+                    const item = result.documents[0];
+                    const roadAddress = item.road_address ? item.road_address.address_name : '';
+                    const jibunAddress = item.address ? item.address.address_name : '';
+                    
+                    // 숨겨진 필드에 자동 입력
+                    document.getElementById('storeRoadAddress').value = roadAddress;
+                    document.getElementById('storeLotAddress').value = jibunAddress;
+                    document.getElementById('storeLatitude').value = parseFloat(item.y).toFixed(6);
+                    document.getElementById('storeLongitude').value = parseFloat(item.x).toFixed(6);
+                    
+                    // 주소 입력칸에 도로명 주소 우선 표시
+                    addressInput.value = roadAddress || jibunAddress || address;
+                    
+                    showAlert('주소 검색 완료! 위도/경도가 자동으로 입력되었습니다.', 'success');
+                } else {
+                    showAlert('주소를 찾을 수 없습니다. 수동으로 위도/경도를 입력해주세요.', 'error');
+                }
+            } catch (error) {
+                console.error('주소 검색 오류:', error);
+                showAlert('주소 검색 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 폼 제출 (중복 실행 방지)
+        let isSubmitting = false;
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // 중복 실행 방지
+            if (isSubmitting) {
+                console.log('이미 제출 중입니다. 중복 실행 방지');
+                return;
+            }
+            
+            isSubmitting = true;
+            
+            try {
+                const address = document.getElementById('storeAddress').value.trim();
+                const roadAddress = document.getElementById('storeRoadAddress').value.trim();
+                const lotAddress = document.getElementById('storeLotAddress').value.trim();
+                
+                // 위도/경도 값 가져오기 (숨겨진 필드에서)
+                let latitude = parseFloat(document.getElementById('storeLatitude').value) || 0;
+                let longitude = parseFloat(document.getElementById('storeLongitude').value) || 0;
+                
+                // 가게 추가 시 (editingId가 없을 때) 아이디/비밀번호 검증
+                if (!editingId) {
+                    const name = document.getElementById('storeUserName').value.trim();
+                    const username = document.getElementById('storeUsername').value.trim();
+                    const password = document.getElementById('storePassword').value;
+                    const passwordConfirm = document.getElementById('storePasswordConfirm').value;
+                    
+                    if (!name) {
+                        const errorMsg = '성명을 입력해주세요.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isSubmitting = false;
+                        return;
+                    }
+                    
+                    if (!username || username.length < 3) {
+                        const errorMsg = '아이디는 3자 이상 입력해주세요.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isSubmitting = false;
+                        return;
+                    }
+                
+                if (!password || password.length < 4) {
+                    const errorMsg = '비밀번호는 4자 이상 입력해주세요.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isSubmitting = false;
+                    return;
+                }
+                
+                if (password !== passwordConfirm) {
+                    const errorMsg = '비밀번호가 일치하지 않습니다.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isSubmitting = false;
+                    return;
+                }
+                
+                // 먼저 사용자 계정 생성
+                try {
+                    const registerResponse = await fetch(`${API_BASE_URL}/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            name: name,
+                            username: username,
+                            password: password,
+                            store: {
+                                name: document.getElementById('storeStoreName').value.trim(),
+                                category: document.getElementById('storeCategory').value.trim(),
+                                address: address || roadAddress || lotAddress,
+                                road_address: roadAddress,
+                                lot_address: lotAddress,
+                                latitude: latitude,
+                                longitude: longitude,
+                                phone: document.getElementById('storePhone').value.trim(),
+                                email: document.getElementById('storeEmail').value.trim(),
+                                description: document.getElementById('storeDescription').value.trim()
+                            }
+                        })
+                    });
+                    
+                    const registerResult = await registerResponse.json();
+                    
+                    if (registerResult.success) {
+                        closeModal();
+                        showAlert('가게와 사용자 계정이 추가되었습니다.', 'success');
+                        await loadStores();
+                        isSubmitting = false;
+                        return;
+                    } else {
+                        const errorMsg = registerResult.error || '가게 추가에 실패했습니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isSubmitting = false;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('가게 추가 오류:', error);
+                    const errorMsg = '가게 추가 중 오류가 발생했습니다: ' + error.message;
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isSubmitting = false;
+                    return;
+                }
+            } else {
+                // 가게 수정 시
+                if (!editingId) {
+                    console.error('editingId가 없습니다.');
+                    const errorMsg = '수정할 가게 정보를 찾을 수 없습니다.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isSubmitting = false;
+                    return;
+                }
+                
+                try {
+                    // 성명 변경 여부 확인
+                    const nameInput = document.getElementById('storeUserName');
+                    const name = nameInput ? nameInput.value.trim() : '';
+                    const originalName = nameInput && nameInput.dataset.originalName ? nameInput.dataset.originalName : '';
+                    const hasNameChange = nameInput !== null && name !== originalName;
+                    
+                    const storeData = {
+                        user_name: hasNameChange ? name : undefined, // 성명 변경 시 포함
+                        name: document.getElementById('storeStoreName').value.trim(),
+                        address: address || roadAddress || lotAddress, // 표시용 주소
+                        road_address: roadAddress || null, // 도로명 주소 (데이터베이스)
+                        lot_address: lotAddress || null, // 지번 주소 (데이터베이스)
+                        latitude: latitude,
+                        longitude: longitude,
+                        phone: document.getElementById('storePhone').value.trim(),
+                        email: document.getElementById('storeEmail').value.trim(),
+                        category: document.getElementById('storeCategory').value.trim(),
+                        description: document.getElementById('storeDescription').value.trim()
+                    };
+                    
+                    console.log('가게 수정 요청 데이터:', storeData);
+
+                    const response = await fetch(`${API_BASE_URL}/stores/${editingId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(storeData)
+                    });
+
+                    console.log('가게 수정 응답 상태:', response.status);
+                    const result = await response.json();
+                    console.log('가게 수정 응답:', result);
+                    
+                    if (result.success) {
+                        closeModal();
+                        showAlert('가게 정보가 수정되었습니다.', 'success');
+                        await loadStores();
+                    } else {
+                        const errorMsg = result.error || '저장에 실패했습니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                    }
+                } catch (error) {
+                    console.error('Error saving store:', error);
+                    console.error('에러 스택:', error.stack);
+                    const errorMsg = '서버 연결에 실패했습니다: ' + error.message;
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                } finally {
+                    isSubmitting = false;
+                    console.log('=== handleSubmit 종료 ===');
+                }
+            }
+        } catch (error) {
+            console.error('handleSubmit 오류:', error);
+            showAlert('폼 제출 중 오류가 발생했습니다: ' + error.message, 'error');
+        } finally {
+            isSubmitting = false;
+        }
+    }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('storeModal').classList.remove('active');
+            editingId = null;
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('storeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 내 정보 모달 열기
+        async function openUserInfoModal() {
+            try {
+                console.log('내 정보 모달 열기 시도');
+                
+                const userInfoModal = document.getElementById('userInfoModal');
+                if (!userInfoModal) {
+                    console.error('내 정보 모달 요소를 찾을 수 없습니다.');
+                    showAlert('내 정보 모달을 찾을 수 없습니다.', 'error');
+                    return;
+                }
+                
+                // 사용자 정보 가져오기
+                const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('사용자 정보 응답 상태:', userResponse.status);
+                const userResult = await userResponse.json();
+                console.log('사용자 정보 응답:', userResult);
+                
+                if (!userResult.success || !userResult.user) {
+                    const errorMsg = userResult.error || '로그인 정보를 가져올 수 없습니다.';
+                    console.error('사용자 정보 가져오기 실패:', errorMsg);
+                    showAlert(errorMsg, 'error');
+                    return;
+                }
+                
+                // 사용자 정보 입력
+                const nameInput = document.getElementById('userInfoName');
+                if (nameInput) {
+                    nameInput.value = userResult.user.name || '';
+                    nameInput.dataset.originalName = userResult.user.name || '';
+                }
+                
+                const usernameInput = document.getElementById('userInfoUsername');
+                if (usernameInput) {
+                    usernameInput.value = userResult.user.username || '';
+                }
+                
+                const emailInput = document.getElementById('userInfoEmail');
+                if (emailInput) {
+                    const originalEmail = userResult.user.email || '';
+                    emailInput.value = originalEmail;
+                    // 원래 이메일 값을 데이터 속성에 저장
+                    emailInput.dataset.originalEmail = originalEmail;
+                }
+                
+                userInfoModal.classList.add('active');
+                userInfoModal.style.display = 'flex';
+                console.log('내 정보 모달 열기 성공');
+            } catch (error) {
+                console.error('사용자 정보 로드 오류:', error);
+                showAlert('정보를 불러오는데 실패했습니다: ' + (error.message || error), 'error');
+            }
+        }
+
+        // 내 정보 모달 닫기
+        function closeUserInfoModal() {
+            console.log('closeUserInfoModal 호출됨');
+            const userInfoModal = document.getElementById('userInfoModal');
+            if (userInfoModal) {
+                userInfoModal.classList.remove('active');
+                console.log('모달 active 클래스 제거됨');
+                // 추가로 display를 none으로 설정
+                userInfoModal.style.display = 'none';
+            } else {
+                console.error('userInfoModal을 찾을 수 없습니다!');
+            }
+            const userInfoForm = document.getElementById('userInfoForm');
+            if (userInfoForm) {
+                userInfoForm.reset();
+            }
+        }
+
+        // 내 정보 수정 (중복 실행 방지)
+        let isUpdating = false;
+        async function handleUserInfoUpdate(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // 중복 실행 방지
+            if (isUpdating) {
+                console.log('이미 업데이트 중입니다. 중복 실행 방지');
+                return;
+            }
+            
+            isUpdating = true;
+            console.log('=== handleUserInfoUpdate 호출됨 ===');
+            
+            try {
+                const nameInput = document.getElementById('userInfoName');
+                const emailInput = document.getElementById('userInfoEmail');
+                const currentPasswordInput = document.getElementById('userInfoCurrentPassword');
+                const newPasswordInput = document.getElementById('userInfoNewPassword');
+                const newPasswordConfirmInput = document.getElementById('userInfoNewPasswordConfirm');
+                
+                console.log('입력 필드 확인:', {
+                    nameInput: !!nameInput,
+                    emailInput: !!emailInput,
+                    currentPasswordInput: !!currentPasswordInput,
+                    newPasswordInput: !!newPasswordInput,
+                    newPasswordConfirmInput: !!newPasswordConfirmInput
+                });
+                
+                if (!currentPasswordInput || !newPasswordInput || !newPasswordConfirmInput) {
+                    console.error('입력 필드를 찾을 수 없습니다.');
+                    const errorMsg = '입력 필드를 찾을 수 없습니다.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isUpdating = false;
+                    showLoading(false);
+                    return;
+                }
+                
+                const name = nameInput ? nameInput.value.trim() : '';
+                const originalName = nameInput && nameInput.dataset.originalName ? nameInput.dataset.originalName : '';
+                const email = emailInput ? emailInput.value.trim() : '';
+                const originalEmail = emailInput && emailInput.dataset.originalEmail ? emailInput.dataset.originalEmail : '';
+                const currentPassword = currentPasswordInput.value.trim();
+                const newPassword = newPasswordInput.value.trim();
+                const newPasswordConfirm = newPasswordConfirmInput.value.trim();
+                
+                console.log('입력값:', { 
+                    name,
+                    originalName,
+                    email, 
+                    originalEmail,
+                    hasPasswordChange: !!(newPassword || newPasswordConfirm),
+                    currentPassword: currentPassword ? '입력됨' : '(빈 값)',
+                    newPassword: newPassword ? '입력됨' : '(빈 값)'
+                });
+                
+                // 성명 업데이트 여부 확인
+                const hasNameChange = nameInput !== null && name !== originalName;
+                // 이메일 업데이트 여부 확인 (이메일이 실제로 변경되었는지 확인)
+                const hasEmailChange = emailInput !== null && email !== originalEmail;
+                // 비밀번호 변경 여부 확인 (새 비밀번호가 입력된 경우만)
+                const hasPasswordChange = newPassword.trim() !== '' || newPasswordConfirm.trim() !== '';
+                
+                console.log('변경 여부:', { 
+                    hasNameChange,
+                    hasEmailChange, 
+                    hasPasswordChange, 
+                    name: name || '(빈 값)',
+                    originalName: originalName || '(없음)',
+                    email: email || '(빈 값)', 
+                    originalEmail: originalEmail || '(없음)',
+                    newPassword: newPassword ? '입력됨' : '(빈 값)' 
+                });
+                
+                // 성명, 이메일, 비밀번호 중 하나라도 변경되지 않았으면 오류
+                if (!hasNameChange && !hasEmailChange && !hasPasswordChange) {
+                    const errorMsg = '변경할 내용이 없습니다. 성명, 이메일 또는 비밀번호를 입력해주세요.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isUpdating = false;
+                    showLoading(false);
+                    return;
+                }
+                
+                // 이메일 형식 검증 (값이 있을 때만)
+                if (hasEmailChange && email !== '' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    const errorMsg = '올바른 이메일 형식을 입력해주세요.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isUpdating = false;
+                    showLoading(false);
+                    return;
+                }
+                
+                // 비밀번호 변경 시 검증
+                if (hasPasswordChange) {
+                    if (!currentPassword) {
+                        const errorMsg = '현재 비밀번호를 입력해주세요.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                    
+                    if (newPassword === '') {
+                        const errorMsg = '새 비밀번호를 입력해주세요.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                    
+                    if (newPassword.length < 4) {
+                        const errorMsg = '새 비밀번호는 4자 이상이어야 합니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                    
+                    if (newPassword !== newPasswordConfirm) {
+                        const errorMsg = '새 비밀번호가 일치하지 않습니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                }
+                
+                console.log('검증 통과, API 호출 시작');
+                
+                showLoading(true);
+                console.log('showLoading(true) 호출됨');
+                
+                // 프로필 업데이트 (성명, 이메일)
+                if (hasNameChange || hasEmailChange) {
+                    const profileData = {};
+                    if (hasNameChange) {
+                        profileData.name = name;
+                    }
+                    if (hasEmailChange) {
+                        profileData.email = email;
+                    }
+                    
+                    console.log('프로필 업데이트 시작:', profileData);
+                    const profileResponse = await fetch(`${API_BASE_URL}/auth/update-profile`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(profileData)
+                    });
+                    
+                    const profileResult = await profileResponse.json();
+                    console.log('프로필 업데이트 응답:', profileResult);
+                    
+                    if (!profileResult.success) {
+                        const errorMsg = profileResult.error || '프로필 업데이트에 실패했습니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                }
+                
+                // 이메일 업데이트 (기존 코드 유지 - 호환성)
+                if (hasEmailChange && !hasNameChange) {
+                    console.log('이메일 업데이트 시작, email:', email);
+                    const emailResponse = await fetch(`${API_BASE_URL}/auth/update-email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({ email: email })
+                    });
+                    
+                    console.log('이메일 업데이트 응답 상태:', emailResponse.status);
+                    
+                    if (!emailResponse.ok) {
+                        const errorText = await emailResponse.text();
+                        console.error('이메일 업데이트 실패:', errorText);
+                        let errorMessage = '이메일 업데이트에 실패했습니다.';
+                        try {
+                            const errorJson = JSON.parse(errorText);
+                            errorMessage = errorJson.error || errorMessage;
+                        } catch (e) {
+                            if (emailResponse.status === 404) {
+                                errorMessage = '서버에 이메일 업데이트 API가 없습니다. 서버를 재시작해주세요.';
+                            } else {
+                                errorMessage = `서버 오류 (${emailResponse.status}): ${errorText}`;
+                            }
+                        }
+                        showAlert(errorMessage, 'error');
+                        alert('오류: ' + errorMessage);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                    
+                    const emailResult = await emailResponse.json();
+                    console.log('이메일 업데이트 응답:', emailResult);
+                    
+                    if (!emailResult.success) {
+                        const errorMsg = emailResult.error || '이메일 업데이트에 실패했습니다.';
+                        showAlert(errorMsg, 'error');
+                        alert('오류: ' + errorMsg);
+                        isUpdating = false;
+                        showLoading(false);
+                        return;
+                    }
+                    console.log('이메일 업데이트 성공');
+                }
+                
+                // 비밀번호 변경
+                if (hasPasswordChange) {
+                    const passwordResponse = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+                
+                const passwordResult = await passwordResponse.json();
+                
+                console.log('비밀번호 변경 응답 상태:', passwordResponse.status);
+                console.log('비밀번호 변경 응답:', passwordResult);
+                
+                if (!passwordResult.success) {
+                    const errorMsg = passwordResult.error || '비밀번호 변경에 실패했습니다.';
+                    showAlert(errorMsg, 'error');
+                    alert('오류: ' + errorMsg);
+                    isUpdating = false;
+                    showLoading(false);
+                    return;
+                }
+                console.log('비밀번호 변경 성공');
+                
+                // 비밀번호 변경 성공 시 필드 초기화
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                newPasswordConfirmInput.value = '';
+                }
+                
+                // 성공 메시지 표시
+                let successMessage = '';
+                if (hasEmailChange && hasPasswordChange) {
+                    successMessage = '이메일과 비밀번호가 변경되었습니다.';
+                } else if (hasEmailChange) {
+                    successMessage = '이메일이 변경되었습니다.';
+                } else if (hasPasswordChange) {
+                    successMessage = '비밀번호가 변경되었습니다.';
+                }
+                
+                console.log('성공 메시지:', successMessage);
+                
+                // 모달 닫기
+                closeUserInfoModal();
+                showAlert(successMessage, 'success');
+                
+            } catch (error) {
+                console.error('정보 수정 오류:', error);
+                console.error('에러 스택:', error.stack);
+                const errorMsg = '정보 수정 중 오류가 발생했습니다: ' + error.message;
+                showAlert(errorMsg, 'error');
+                alert('오류: ' + errorMsg);
+            } finally {
+                isUpdating = false;
+                showLoading(false);
+                console.log('=== handleUserInfoUpdate 종료 ===');
+            }
+        }
+
+        // 내 정보 모달 외부 클릭 시 닫기 (DOM 로드 후)
+        window.addEventListener('load', function() {
+            const userInfoModal = document.getElementById('userInfoModal');
+            if (userInfoModal) {
+                userInfoModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeUserInfoModal();
+                    }
+                });
+            }
+            
+            // form 제출 이벤트는 버튼의 onclick으로 처리하므로 주석 처리
+            // const userInfoForm = document.getElementById('userInfoForm');
+            // if (userInfoForm) {
+            //     userInfoForm.addEventListener('submit', function(e) {
+            //         e.preventDefault();
+            //         e.stopPropagation();
+            //         handleUserInfoUpdate(e);
+            //         return false;
+            //     });
+            //     console.log('userInfoForm 이벤트 리스너 등록 완료');
+            // }
+            
+            // 저장 버튼은 onclick으로 처리하므로 addEventListener 주석 처리 (중복 방지)
+            // const saveUserInfoBtn = document.getElementById('saveUserInfoBtn');
+            // if (saveUserInfoBtn) {
+            //     saveUserInfoBtn.addEventListener('click', function(e) {
+            //         e.preventDefault();
+            //         e.stopPropagation();
+            //         console.log('저장 버튼 클릭 이벤트 발생');
+            //         handleUserInfoUpdate(e);
+            //         return false;
+            //     });
+            //     console.log('saveUserInfoBtn 이벤트 리스너 등록 완료');
+            // } else {
+            //     console.error('saveUserInfoBtn을 찾을 수 없습니다!');
+            // }
+        });
+
+        // 로딩 표시/숨김
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        // 알림 표시
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} active`;
+            
+            // 에러 메시지인 경우 alert 창으로도 표시
+            if (type === 'error') {
+                window.alert('오류: ' + message);
+            }
+            
+            setTimeout(() => {
+                alert.classList.remove('active');
+            }, 3000);
+        }
+
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 회원 목록 로드
+        let isLoadingUsers = false;
+        async function loadUsers() {
+            // 중복 실행 방지
+            if (isLoadingUsers) {
+                console.log('회원 목록 로드가 이미 진행 중입니다.');
+                return;
+            }
+            
+            const loadingEl = document.getElementById('usersLoading');
+            const tableEl = document.getElementById('usersTable');
+            const emptyStateEl = document.getElementById('usersEmptyState');
+            
+            // 요소가 없으면 중단
+            if (!loadingEl || !tableEl || !emptyStateEl) {
+                console.error('회원 목록 로드에 필요한 DOM 요소를 찾을 수 없습니다.', {
+                    loadingEl: !!loadingEl,
+                    tableEl: !!tableEl,
+                    emptyStateEl: !!emptyStateEl
+                });
+                return;
+            }
+            
+            isLoadingUsers = true;
+            
+            try {
+                console.log('=== 회원 목록 로드 시작 ===');
+                
+                // 로딩 표시
+                loadingEl.style.display = 'flex';
+                tableEl.style.display = 'none';
+                emptyStateEl.style.display = 'none';
+
+                console.log('API 요청:', `${API_BASE_URL}/users`);
+                
+                // 타임아웃 설정 (5초)
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('요청 시간이 초과되었습니다. (5초)'));
+                    }, 5000);
+                });
+                
+                let response;
+                try {
+                    const fetchPromise = fetch(`${API_BASE_URL}/users`, {
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        method: 'GET'
+                    });
+                    
+                    response = await Promise.race([fetchPromise, timeoutPromise]);
+                } catch (fetchError) {
+                    console.error('Fetch 오류:', fetchError);
+                    if (fetchError.message.includes('시간이 초과')) {
+                        throw fetchError;
+                    }
+                    throw new Error(`네트워크 오류: ${fetchError.message}`);
+                }
+                
+                console.log('API 응답 상태:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    let errorText = '';
+                    try {
+                        errorText = await response.text();
+                        console.error('API 오류 응답:', errorText);
+                    } catch (e) {
+                        errorText = `HTTP ${response.status}`;
+                    }
+                    throw new Error(`HTTP 오류: ${response.status} - ${errorText}`);
+                }
+                
+                let result;
+                try {
+                    result = await response.json();
+                    console.log('API 응답 데이터:', result);
+                } catch (parseError) {
+                    console.error('JSON 파싱 오류:', parseError);
+                    throw new Error('서버 응답을 파싱할 수 없습니다.');
+                }
+                
+                if (result.success) {
+                    users = result.data || [];
+                    filteredUsers = users;
+                    console.log('회원 목록 로드 성공:', users.length, '명');
+                    displayUsers(users);
+                } else {
+                    const errorMsg = result.error || '알 수 없는 오류';
+                    console.error('회원 목록 로드 실패:', errorMsg);
+                    showAlert('회원 목록을 불러오는데 실패했습니다: ' + errorMsg, 'error');
+                    displayUsers([]);
+                }
+            } catch (error) {
+                console.error('=== 회원 목록 로드 오류 ===');
+                console.error('에러 타입:', error.name);
+                console.error('에러 메시지:', error.message);
+                console.error('에러 스택:', error.stack);
+                
+                let errorMsg = '서버 연결에 실패했습니다.';
+                if (error.message.includes('요청 시간이 초과') || error.message.includes('타임아웃')) {
+                    errorMsg = '서버 응답이 지연되고 있습니다. 서버 상태를 확인해주세요.';
+                } else if (error.message.includes('401') || error.message.includes('403')) {
+                    errorMsg = '로그인 세션이 만료되었습니다. 페이지를 새로고침하세요.';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else if (error.message.includes('네트워크')) {
+                    errorMsg = '네트워크 연결을 확인해주세요. 서버가 실행 중인지 확인하세요.';
+                } else if (error.message) {
+                    errorMsg = `오류: ${error.message}`;
+                }
+                
+                showAlert(errorMsg, 'error');
+                displayUsers([]);
+            } finally {
+                // 확실히 로딩 숨기기 (항상 실행)
+                isLoadingUsers = false;
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                    console.log('로딩 요소 숨김 완료');
+                }
+                console.log('=== 회원 목록 로드 완료 (finally 블록) ===');
+            }
+        }
+
+        // 회원 목록 표시
+        function displayUsers(userList) {
+            const tbody = document.getElementById('usersTableBody');
+            const table = document.getElementById('usersTable');
+            const emptyState = document.getElementById('usersEmptyState');
+            const loadingEl = document.getElementById('usersLoading');
+
+            // 요소가 없으면 에러
+            if (!tbody || !table || !emptyState) {
+                console.error('회원 목록 표시에 필요한 DOM 요소를 찾을 수 없습니다.');
+                if (loadingEl) loadingEl.style.display = 'none';
+                return;
+            }
+
+            // 로딩 확실히 숨기기
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+
+            if (!userList || userList.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = userList.map(user => `
+                <tr>
+                    <td style="text-align: center; font-weight: 600; color: #667eea;">${user.id}</td>
+                    <td><strong style="color: #1976d2; font-weight: 600;">${user.name ? escapeHtml(user.name) : '<span style="color: #999;">-</span>'}</strong></td>
+                    <td><strong style="color: #667eea;">${escapeHtml(user.username)}</strong></td>
+                    <td style="font-size: 0.9rem;">${user.email ? escapeHtml(user.email) : '<span style="color: #999;">-</span>'}</td>
+                    <td style="text-align: center; font-weight: 600;">${user.store_count || 0}</td>
+                    <td style="font-size: 0.85rem; color: #666; max-width: 200px;">
+                        ${user.store_names && user.store_names.length > 0 
+                            ? user.store_names.map(name => `<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; margin-right: 4px; display: inline-block; margin-bottom: 4px;">${escapeHtml(name)}</span>`).join('')
+                            : '<span style="color: #999;">-</span>'
+                        }
+                    </td>
+                    <td style="text-align: center;">
+                        ${user.is_temp_password 
+                            ? '<span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">임시</span>'
+                            : '<span style="color: #999;">-</span>'
+                        }
+                    </td>
+                    <td style="font-size: 0.85rem; color: #666;">${formatDate(user.created_at)}</td>
+                    <td style="text-align: center;">
+                        <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${escapeHtml(user.username)}')" style="padding: 5px 10px; font-size: 0.85rem;">삭제</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 회원 검색 필터
+        function filterUsers() {
+            const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+            filteredUsers = users.filter(user => 
+                user.username.toLowerCase().includes(searchTerm) ||
+                (user.email && user.email.toLowerCase().includes(searchTerm))
+            );
+            displayUsers(filteredUsers);
+        }
+
+        // 회원 삭제
+        async function deleteUser(userId, username) {
+            if (!confirm(`정말로 회원 "${username}"을(를) 삭제하시겠습니까?\n\n주의: 해당 회원의 모든 가게도 함께 삭제됩니다.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('회원이 삭제되었습니다.', 'success');
+                    // 회원 목록 다시 로드
+                    await loadUsers();
+                } else {
+                    showAlert(result.error || '회원 삭제에 실패했습니다.', 'error');
+                }
+            } catch (error) {
+                console.error('회원 삭제 오류:', error);
+                showAlert('서버 연결에 실패했습니다.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
