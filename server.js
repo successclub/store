@@ -54,7 +54,7 @@ dbModule.initDatabase()
             if (!adminUser) {
                 const adminPasswordHash = await bcrypt.hash('123456', 10);
                 await dbModule.addUser(db, 'admin', adminPasswordHash);
-                console.log('✅ admin 계정이 생성되었습니다. (비밀번호: 123456)');
+                console.log('✅ admin 계정이 생성되었습니다.');
             } else {
                 console.log('✅ admin 계정이 이미 존재합니다.');
             }
@@ -257,11 +257,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         const tempPassword = generateTempPassword();
         const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
         
-        console.log('임시 비밀번호 생성:', {
+        console.log('임시 비밀번호 생성 완료:', {
             userId: user.id,
-            username: user.username,
-            tempPassword: tempPassword, // 디버깅용 (실제 운영에서는 제거)
-            tempPasswordLength: tempPassword.length
+            username: user.username
         });
         
         // 비밀번호 업데이트 (임시 비밀번호 플래그 설정)
@@ -364,7 +362,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             
             // 구체적인 오류 메시지 제공
             if (emailError.code === 'EAUTH' || emailError.responseCode === 535) {
-                errorMessage = 'Gmail 인증에 실패했습니다.\n\n확인 사항:\n1. Google 계정 → 보안 → 2단계 인증이 활성화되어 있는지 확인\n2. 앱 비밀번호가 올바른지 확인 (16자리, 공백 없이)\n3. 앱 비밀번호 재생성: https://myaccount.google.com/apppasswords\n   - "앱 선택" → "기타(맞춤 이름)" → "메일" 입력\n   - 생성된 16자리 비밀번호를 복사 (공백 제거)\n4. .env 파일 확인:\n   - EMAIL_USER=ybhk62@gmail.com (정확한 이메일 주소)\n   - EMAIL_PASS=앱비밀번호16자리 (공백 없이)\n5. 서버 재시작\n\n참고: 앱 비밀번호는 Google 계정 비밀번호가 아닙니다!';
+                errorMessage = 'Gmail 인증에 실패했습니다.\n\n확인 사항:\n1. Google 계정 → 보안 → 2단계 인증이 활성화되어 있는지 확인\n2. 앱 비밀번호가 올바른지 확인 (16자리, 공백 없이)\n3. 앱 비밀번호 재생성: https://myaccount.google.com/apppasswords\n   - "앱 선택" → "기타(맞춤 이름)" → "메일" 입력\n   - 생성된 16자리 비밀번호를 복사 (공백 제거)\n4. .env 파일 확인:\n   - EMAIL_USER=your-email@gmail.com (정확한 이메일 주소)\n   - EMAIL_PASS=앱비밀번호16자리 (공백 없이)\n5. 서버 재시작\n\n참고: 앱 비밀번호는 Google 계정 비밀번호가 아닙니다!';
             } else if (emailError.code === 'ECONNECTION') {
                 errorMessage = '이메일 서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
             } else if (emailError.response) {
@@ -498,130 +496,6 @@ app.post('/api/auth/change-password', async (req, res) => {
         res.json({ success: true, message: '비밀번호가 변경되었습니다.' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// 모든 회원 조회 (admin만 접근 가능)
-app.get('/api/users', async (req, res) => {
-    try {
-        if (!req.session.userId) {
-            console.log('회원 목록 조회 실패: 로그인 필요');
-            return res.status(401).json({ 
-                success: false, 
-                error: '로그인이 필요합니다.' 
-            });
-        }
-        
-        const user = await dbModule.getUserById(db, req.session.userId);
-        if (!user) {
-            console.log('회원 목록 조회 실패: 사용자 정보 없음');
-            return res.status(401).json({ 
-                success: false, 
-                error: '사용자 정보를 찾을 수 없습니다.' 
-            });
-        }
-        
-        const fullUser = await dbModule.getUserByUsername(db, user.username);
-        if (!fullUser) {
-            console.log('회원 목록 조회 실패: 전체 사용자 정보 없음');
-            return res.status(401).json({ 
-                success: false, 
-                error: '사용자 정보를 가져올 수 없습니다.' 
-            });
-        }
-        
-        // admin만 접근 가능
-        if (fullUser.username !== 'admin') {
-            console.log('회원 목록 조회 실패: 관리자 권한 없음', fullUser.username);
-            return res.status(403).json({ 
-                success: false, 
-                error: '관리자만 접근할 수 있습니다.' 
-            });
-        }
-        
-        console.log('회원 목록 조회 시작 (admin)');
-        
-        // 데이터베이스 연결 확인
-        if (!db) {
-            console.error('데이터베이스 연결이 없습니다.');
-            return res.status(500).json({ 
-                success: false, 
-                error: '데이터베이스 연결 오류' 
-            });
-        }
-        
-        const users = await dbModule.getAllUsers(db);
-        console.log('회원 목록 조회 성공:', users.length, '명');
-        res.json({ success: true, data: users });
-    } catch (err) {
-        console.error('회원 목록 조회 오류:', err);
-        console.error('에러 스택:', err.stack);
-        res.status(500).json({ 
-            success: false, 
-            error: err.message || '서버 오류가 발생했습니다.' 
-        });
-    }
-});
-
-// 모든 회원 조회 (admin만 접근 가능)
-app.get('/api/users', async (req, res) => {
-    try {
-        if (!req.session.userId) {
-            console.log('회원 목록 조회 실패: 로그인 필요');
-            return res.status(401).json({ 
-                success: false, 
-                error: '로그인이 필요합니다.' 
-            });
-        }
-        
-        const user = await dbModule.getUserById(db, req.session.userId);
-        if (!user) {
-            console.log('회원 목록 조회 실패: 사용자 정보 없음');
-            return res.status(401).json({ 
-                success: false, 
-                error: '사용자 정보를 찾을 수 없습니다.' 
-            });
-        }
-        
-        const fullUser = await dbModule.getUserByUsername(db, user.username);
-        if (!fullUser) {
-            console.log('회원 목록 조회 실패: 전체 사용자 정보 없음');
-            return res.status(401).json({ 
-                success: false, 
-                error: '사용자 정보를 가져올 수 없습니다.' 
-            });
-        }
-        
-        // admin만 접근 가능
-        if (fullUser.username !== 'admin') {
-            console.log('회원 목록 조회 실패: 관리자 권한 없음', fullUser.username);
-            return res.status(403).json({ 
-                success: false, 
-                error: '관리자만 접근할 수 있습니다.' 
-            });
-        }
-        
-        console.log('회원 목록 조회 시작 (admin)');
-        
-        // 데이터베이스 연결 확인
-        if (!db) {
-            console.error('데이터베이스 연결이 없습니다.');
-            return res.status(500).json({ 
-                success: false, 
-                error: '데이터베이스 연결 오류' 
-            });
-        }
-        
-        const users = await dbModule.getAllUsers(db);
-        console.log('회원 목록 조회 성공:', users.length, '명');
-        res.json({ success: true, data: users });
-    } catch (err) {
-        console.error('회원 목록 조회 오류:', err);
-        console.error('에러 스택:', err.stack);
-        res.status(500).json({ 
-            success: false, 
-            error: err.message || '서버 오류가 발생했습니다.' 
-        });
     }
 });
 

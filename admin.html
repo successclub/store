@@ -715,7 +715,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000/api';
+        const API_BASE_URL = '/api';
         let stores = [];
         let filteredStores = [];
         let users = [];
@@ -733,20 +733,20 @@
                 
                 if (!result.success || !result.user) {
                     // 로그인되지 않은 경우 index.html로 리다이렉트
-                    window.location.href = 'index.html';
+                    window.location.href = '/index.html';
                     return false;
                 }
                 
                 // admin이 아닌 경우 index.html로 리다이렉트
                 if (result.user.username !== 'admin') {
-                    window.location.href = 'index.html';
+                    window.location.href = '/index.html';
                     return false;
                 }
                 
                 return true;
             } catch (error) {
                 console.error('로그인 상태 확인 오류:', error);
-                window.location.href = 'index.html';
+                window.location.href = '/index.html';
                 return false;
             }
         }
@@ -1876,7 +1876,7 @@
                 } else if (error.message.includes('401') || error.message.includes('403')) {
                     errorMsg = '로그인 세션이 만료되었습니다. 페이지를 새로고침하세요.';
                     setTimeout(() => {
-                        window.location.href = 'index.html';
+                        window.location.href = '/index.html';
                     }, 2000);
                 } else if (error.message.includes('네트워크')) {
                     errorMsg = '네트워크 연결을 확인해주세요. 서버가 실행 중인지 확인하세요.';

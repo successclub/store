@@ -2054,7 +2054,7 @@
                     if (currentUser.username === 'admin') {
                         userInfoButton.textContent = '관리자 페이지';
                         userInfoButton.onclick = function() {
-                            window.location.href = 'http://localhost:3000/admin.html';
+                            window.location.href = '/admin.html';
                         };
                     } else {
                         userInfoButton.textContent = '내 정보';
@@ -2316,7 +2316,7 @@
                     if (currentUser.username === 'admin') {
                         alert('가게 추가가 완료되었습니다. 관리자 페이지로 이동합니다.');
                         setTimeout(() => {
-                            window.location.href = 'http://localhost:3000/admin.html';
+                            window.location.href = '/admin.html';
                         }, 500);
                     } else {
                         alert('가게 추가가 완료되었습니다. 로그인되었습니다.');
@@ -3007,7 +3007,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showError(result.message || '입력하신 이메일로 임시 비밀번호를 전송했습니다. 이메일을 확인해주세요.');
+                    alert(result.message || '입력하신 이메일로 임시 비밀번호를 전송했습니다. 이메일을 확인해주세요.');
                     closeForgotPasswordModal();
                 } else {
                     showError(result.error || '비밀번호 찾기에 실패했습니다.');

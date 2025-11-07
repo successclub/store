@@ -34,11 +34,23 @@ function initDatabase() {
                 console.log('users 테이블이 준비되었습니다.');
                 
                 // users 테이블에 email 컬럼 추가 (마이그레이션)
-                db.run(`ALTER TABLE users ADD COLUMN email TEXT`, () => {});
+                db.run(`ALTER TABLE users ADD COLUMN email TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('email 컬럼 추가 오류:', err);
+                    }
+                });
                 // users 테이블에 is_temp_password 컬럼 추가 (마이그레이션)
-                db.run(`ALTER TABLE users ADD COLUMN is_temp_password INTEGER DEFAULT 0`, () => {});
+                db.run(`ALTER TABLE users ADD COLUMN is_temp_password INTEGER DEFAULT 0`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('is_temp_password 컬럼 추가 오류:', err);
+                    }
+                });
                 // users 테이블에 name 컬럼 추가 (마이그레이션)
-                db.run(`ALTER TABLE users ADD COLUMN name TEXT`, () => {});
+                db.run(`ALTER TABLE users ADD COLUMN name TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('name 컬럼 추가 오류:', err);
+                    }
+                });
             });
 
             // 가게 테이블 생성
@@ -67,10 +79,26 @@ function initDatabase() {
                 }
                 
                 // 기존 테이블에 새 컬럼 추가 (마이그레이션)
-                db.run(`ALTER TABLE stores ADD COLUMN road_address TEXT`, () => {});
-                db.run(`ALTER TABLE stores ADD COLUMN lot_address TEXT`, () => {});
-                db.run(`ALTER TABLE stores ADD COLUMN user_id INTEGER`, () => {});
-                db.run(`ALTER TABLE stores ADD COLUMN email TEXT`, () => {});
+                db.run(`ALTER TABLE stores ADD COLUMN road_address TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('road_address 컬럼 추가 오류:', err);
+                    }
+                });
+                db.run(`ALTER TABLE stores ADD COLUMN lot_address TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('lot_address 컬럼 추가 오류:', err);
+                    }
+                });
+                db.run(`ALTER TABLE stores ADD COLUMN user_id INTEGER`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('user_id 컬럼 추가 오류:', err);
+                    }
+                });
+                db.run(`ALTER TABLE stores ADD COLUMN email TEXT`, (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        console.error('email 컬럼 추가 오류:', err);
+                    }
+                });
                 
                 console.log('stores 테이블이 준비되었습니다.');
                 resolve(db);
