@@ -12,6 +12,9 @@ const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Railway 프록시 환경 설정
+app.set('trust proxy', 1); // Railway 프록시 신뢰
+
 // 네이버 API 키
 const NAVER_CLIENT_ID = 'ub4zAdL_qPNteEBKd9IK';
 const NAVER_CLIENT_SECRET = 'aXawnwfFZJ';
@@ -26,7 +29,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production', // Railway는 HTTPS 사용
+        secure: 'auto', // Railway 프록시에서 자동 감지
         httpOnly: true,
         sameSite: 'lax', // CSRF 보호 및 쿠키 전송 보장
         maxAge: 24 * 60 * 60 * 1000, // 24시간
@@ -72,18 +75,29 @@ dbModule.initDatabase()
 // 로그인 상태 확인 (패스워드 포함)
 app.get('/api/auth/me', async (req, res) => {
     try {
+        console.log('세션 확인 요청:', {
+            sessionId: req.sessionID,
+            userId: req.session.userId,
+            username: req.session.username,
+            cookie: req.headers.cookie ? '있음' : '없음'
+        });
+        
         if (req.session.userId) {
             const user = await dbModule.getUserById(db, req.session.userId);
             if (!user) {
+                console.log('사용자를 찾을 수 없음:', req.session.userId);
                 return res.json({ success: false, user: null, error: '사용자를 찾을 수 없습니다.' });
             }
             // 전체 사용자 정보 가져오기 (패스워드 포함)
             const fullUser = await dbModule.getUserByUsername(db, user.username);
             if (!fullUser) {
+                console.log('전체 사용자 정보를 가져올 수 없음:', user.username);
                 return res.json({ success: false, user: null, error: '사용자 정보를 가져올 수 없습니다.' });
             }
+            console.log('✅ 세션 확인 성공:', fullUser.username);
             res.json({ success: true, user: fullUser });
         } else {
+            console.log('⚠️ 세션이 없음 - 로그인 필요');
             res.json({ success: false, user: null, error: '로그인이 필요합니다.' });
         }
     } catch (err) {
@@ -200,6 +214,21 @@ app.post('/api/auth/login', async (req, res) => {
         
         req.session.userId = user.id;
         req.session.username = user.username;
+        
+        console.log('✅ 로그인 성공 - 세션 설정:', {
+            sessionId: req.sessionID,
+            userId: req.session.userId,
+            username: req.session.username
+        });
+        
+        // 세션 저장 확인
+        req.session.save((err) => {
+            if (err) {
+                console.error('세션 저장 오류:', err);
+            } else {
+                console.log('세션 저장 완료');
+            }
+        });
         
         // 임시 비밀번호 사용 여부 확인
         const isTempPassword = user.is_temp_password === 1;
