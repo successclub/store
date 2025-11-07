@@ -26,9 +26,11 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: process.env.NODE_ENV === 'production', // HTTPS 사용 시 true
+        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production', // Railway는 HTTPS 사용
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24시간
+        sameSite: 'lax', // CSRF 보호 및 쿠키 전송 보장
+        maxAge: 24 * 60 * 60 * 1000, // 24시간
+        domain: undefined // Railway 도메인에 맞게 자동 설정
     }
 }));
 

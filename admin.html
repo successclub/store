@@ -723,29 +723,55 @@
         let editingId = null;
         let currentTab = 'stores';
 
-        // 로그인 상태 확인
-        async function checkAuth() {
+        // 로그인 상태 확인 (재시도 로직 포함)
+        async function checkAuth(retryCount = 0) {
+            const maxRetries = 3;
+            const retryDelay = 1000; // 1초
+            
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/me`, {
-                    credentials: 'include'
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
+                
                 const result = await response.json();
                 
                 if (!result.success || !result.user) {
+                    // 재시도 (Railway에서 세션 설정 지연 가능)
+                    if (retryCount < maxRetries) {
+                        console.log(`세션 확인 재시도 ${retryCount + 1}/${maxRetries}...`);
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                        return await checkAuth(retryCount + 1);
+                    }
+                    
                     // 로그인되지 않은 경우 index.html로 리다이렉트
+                    console.error('로그인 상태 확인 실패: 세션이 없습니다.');
                     window.location.href = '/index.html';
                     return false;
                 }
                 
                 // admin이 아닌 경우 index.html로 리다이렉트
                 if (result.user.username !== 'admin') {
+                    console.error('관리자 권한이 없습니다.');
                     window.location.href = '/index.html';
                     return false;
                 }
                 
+                console.log('✅ 관리자 인증 성공:', result.user.username);
                 return true;
             } catch (error) {
                 console.error('로그인 상태 확인 오류:', error);
+                
+                // 재시도
+                if (retryCount < maxRetries) {
+                    console.log(`네트워크 오류 재시도 ${retryCount + 1}/${maxRetries}...`);
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    return await checkAuth(retryCount + 1);
+                }
+                
                 window.location.href = '/index.html';
                 return false;
             }

@@ -2054,7 +2054,10 @@
                     if (currentUser.username === 'admin') {
                         userInfoButton.textContent = '관리자 페이지';
                         userInfoButton.onclick = function() {
-                            window.location.href = '/admin.html';
+                            // Railway에서 세션 설정 지연을 고려하여 약간의 지연 추가
+                            setTimeout(() => {
+                                window.location.href = '/admin.html';
+                            }, 500);
                         };
                     } else {
                         userInfoButton.textContent = '내 정보';
