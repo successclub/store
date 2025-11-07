@@ -2194,22 +2194,35 @@
                 return;
             }
             
+            const submitBtn = document.getElementById('registerSubmitBtn');
+            
             try {
                 showLoading(true);
+                
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '처리 중...';
+                }
+                
                 await handleRegister(event);
             } catch (error) {
                 console.error('가입 버튼 클릭 오류:', error);
                 let errorMsg = '가입 처리 중 오류가 발생했습니다.';
                 
-                if (error.message) {
+                if (error && error.message) {
                     errorMsg = error.message;
-                } else if (error.toString) {
+                } else if (error && error.toString) {
                     errorMsg = error.toString();
                 }
                 
                 showError(errorMsg);
                 alert('오류: ' + errorMsg);
             } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '가입';
+                }
+                
                 showLoading(false);
             }
         };
@@ -2964,17 +2977,8 @@
             if (registerForm) {
                 registerForm.addEventListener('submit', async function(e) {
                     try {
-                        e.preventDefault();
-                        e.stopPropagation();
                         console.log('회원가입 폼 submit 이벤트 발생');
-                        if (typeof window.handleRegister === 'function') {
-                            await window.handleRegister(e);
-                        } else {
-                            const errorMsg = '가입 기능을 사용할 수 없습니다. 페이지를 새로고침해주세요.';
-                            console.error('handleRegister 함수를 찾을 수 없습니다!');
-                            showError(errorMsg);
-                            alert('오류: ' + errorMsg);
-                        }
+                        await window.handleRegisterButtonClick(e);
                     } catch (error) {
                         console.error('회원가입 폼 제출 오류:', error);
                         const errorMsg = '가입 폼 제출 중 오류가 발생했습니다: ' + (error.message || error);
@@ -2990,40 +2994,7 @@
             const registerSubmitBtn = document.getElementById('registerSubmitBtn');
             if (registerSubmitBtn) {
                 registerSubmitBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    console.log('=== 가입 버튼 클릭됨 ===');
-                    
-                    // 버튼 상태 변경
-                    const btn = document.getElementById('registerSubmitBtn');
-                    if (btn) {
-                        btn.disabled = true;
-                        btn.textContent = '처리 중...';
-                    }
-                    
-                    try {
-                        // handleRegister 함수 호출
-                        if (typeof window.handleRegister === 'function') {
-                            // 가짜 이벤트 객체 생성
-                            const fakeEvent = { preventDefault: () => {}, stopPropagation: () => {} };
-                            await window.handleRegister(fakeEvent);
-                        } else {
-                            throw new Error('가입 기능을 사용할 수 없습니다. 페이지를 새로고침해주세요.');
-                        }
-                    } catch (error) {
-                        console.error('가입 버튼 클릭 오류:', error);
-                        const errorMsg = error.message || '가입 처리 중 오류가 발생했습니다.';
-                        showError(errorMsg);
-                        alert('오류: ' + errorMsg);
-                    } finally {
-                        // 버튼 상태 복원
-                        const currentBtn = document.getElementById('registerSubmitBtn');
-                        if (currentBtn) {
-                            currentBtn.disabled = false;
-                            currentBtn.textContent = '가입';
-                        }
-                    }
+                    await window.handleRegisterButtonClick(e);
                 });
                 registerSubmitBtn.setAttribute('data-listener-attached', 'true');
                 console.log('registerSubmitBtn 이벤트 리스너 등록 완료');
