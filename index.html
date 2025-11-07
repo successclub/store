@@ -2292,11 +2292,16 @@
                     } catch (e) {
                         if (response.status === 404) {
                             errorMessage = '서버에 회원가입 API가 없습니다. 서버를 재시작해주세요.';
+                        } else if (response.status === 500) {
+                            errorMessage = '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                        } else if (response.status === 400) {
+                            errorMessage = '입력한 정보를 확인해주세요.';
                         } else {
-                            errorMessage = `서버 오류 (${response.status}): ${errorText}`;
+                            errorMessage = `서버 오류 (${response.status}): ${errorText.substring(0, 100)}`;
                         }
                     }
                     showError(errorMessage);
+                    alert('오류: ' + errorMessage);
                     showLoading(false);
                     isRegistering = false;
                     return;
@@ -2335,7 +2340,20 @@
             } catch (error) {
                 console.error('회원가입 오류:', error);
                 console.error('에러 스택:', error.stack);
-                const errorMsg = '가게 추가 중 오류가 발생했습니다: ' + (error.message || error);
+                let errorMsg = '가게 추가 중 오류가 발생했습니다.';
+                
+                if (error.message) {
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        errorMsg = '서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 서버가 실행 중인지 확인해주세요.';
+                    } else if (error.message.includes('timeout')) {
+                        errorMsg = '요청 시간이 초과되었습니다. 다시 시도해주세요.';
+                    } else {
+                        errorMsg = `오류: ${error.message}`;
+                    }
+                } else {
+                    errorMsg = '알 수 없는 오류가 발생했습니다. 다시 시도해주세요.';
+                }
+                
                 showError(errorMsg);
                 alert('오류: ' + errorMsg);
             } finally {

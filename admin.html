@@ -723,10 +723,16 @@
         let editingId = null;
         let currentTab = 'stores';
 
-        // 로그인 상태 확인 (재시도 로직 포함)
+        // 로그인 상태 확인 (한 번만 실행, 재시도 최소화)
+        let authChecked = false;
         async function checkAuth(retryCount = 0) {
-            const maxRetries = 5; // 재시도 횟수 증가
-            const retryDelay = 2000; // 2초로 증가 (Railway 세션 설정 대기)
+            // 이미 인증 확인이 완료되었으면 중복 실행 방지
+            if (authChecked && retryCount === 0) {
+                return true;
+            }
+            
+            const maxRetries = 2; // 재시도 횟수 감소 (너무 많이 하면 사용자 경험 저하)
+            const retryDelay = 1000; // 1초로 감소
             
             try {
                 console.log(`[${retryCount + 1}] 세션 확인 시도 중...`);
@@ -735,16 +741,21 @@
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    cache: 'no-cache' // 캐시 방지
                 });
                 
                 console.log('세션 확인 응답 상태:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const result = await response.json();
                 console.log('세션 확인 결과:', result);
                 
                 if (!result.success || !result.user) {
-                    // 재시도 (Railway에서 세션 설정 지연 가능)
+                    // 첫 시도에서만 재시도
                     if (retryCount < maxRetries) {
                         console.log(`⚠️ 세션 확인 실패. ${retryDelay/1000}초 후 재시도 ${retryCount + 1}/${maxRetries}...`);
                         await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -752,35 +763,30 @@
                     }
                     
                     // 로그인되지 않은 경우 index.html로 리다이렉트
-                    console.error('❌ 로그인 상태 확인 실패: 세션이 없습니다. (최대 재시도 횟수 초과)');
-                    alert('세션 확인에 실패했습니다. 다시 로그인해주세요.');
-                    window.location.href = '/index.html';
+                    console.error('❌ 로그인 상태 확인 실패: 세션이 없습니다.');
                     return false;
                 }
                 
                 // admin이 아닌 경우 index.html로 리다이렉트
                 if (result.user.username !== 'admin') {
                     console.error('❌ 관리자 권한이 없습니다.');
-                    alert('관리자 권한이 필요합니다.');
-                    window.location.href = '/index.html';
                     return false;
                 }
                 
                 console.log('✅ 관리자 인증 성공:', result.user.username);
+                authChecked = true; // 인증 성공 플래그 설정
                 return true;
             } catch (error) {
                 console.error('❌ 로그인 상태 확인 오류:', error);
                 
-                // 재시도
+                // 첫 시도에서만 재시도
                 if (retryCount < maxRetries) {
                     console.log(`⚠️ 네트워크 오류. ${retryDelay/1000}초 후 재시도 ${retryCount + 1}/${maxRetries}...`);
                     await new Promise(resolve => setTimeout(resolve, retryDelay));
                     return await checkAuth(retryCount + 1);
                 }
                 
-                console.error('❌ 최대 재시도 횟수 초과. 로그인 페이지로 이동합니다.');
-                alert('서버 연결에 실패했습니다. 다시 시도해주세요.');
-                window.location.href = '/index.html';
+                console.error('❌ 세션 확인 실패. 로그인 페이지로 이동합니다.');
                 return false;
             }
         }
@@ -833,12 +839,16 @@
                 } else {
                     // 로그인 실패 시 로딩 숨기기
                     if (loadingEl) loadingEl.style.display = 'none';
+                    alert('관리자 권한이 필요합니다. 다시 로그인해주세요.');
+                    window.location.href = '/index.html';
                 }
             } catch (error) {
                 console.error('페이지 초기화 오류:', error);
                 // 에러 발생 시에도 로딩 숨기기
                 if (loadingEl) loadingEl.style.display = 'none';
                 if (usersLoadingEl) usersLoadingEl.style.display = 'none';
+                alert('페이지 초기화 중 오류가 발생했습니다. 다시 시도해주세요.');
+                window.location.href = '/index.html';
             }
         });
 

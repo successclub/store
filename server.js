@@ -29,11 +29,12 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: 'auto', // Railway 프록시에서 자동 감지
+        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY === 'true', // Railway는 항상 HTTPS
         httpOnly: true,
         sameSite: 'lax', // CSRF 보호 및 쿠키 전송 보장
         maxAge: 24 * 60 * 60 * 1000, // 24시간
-        domain: undefined // Railway 도메인에 맞게 자동 설정
+        domain: undefined, // Railway 도메인에 맞게 자동 설정
+        path: '/' // 모든 경로에서 쿠키 사용
     }
 }));
 
