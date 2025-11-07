@@ -663,7 +663,7 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">취소</button>
-                    <button type="button" id="registerSubmitBtn" class="btn btn-primary">가입</button>
+                    <button type="button" id="registerSubmitBtn" class="btn btn-primary" onclick="handleRegisterButtonClick(event)">가입</button>
                 </div>
             </form>
         </div>
@@ -2175,6 +2175,45 @@
 
         // 회원가입 (중복 실행 방지)
         let isRegistering = false;
+        
+        // 가입 버튼 클릭 핸들러 (직접 호출)
+        window.handleRegisterButtonClick = async function(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            console.log('=== 가입 버튼 클릭됨 ===');
+            
+            // 중복 실행 방지
+            if (isRegistering) {
+                const msg = '이미 처리 중입니다. 잠시 후 다시 시도해주세요.';
+                console.log(msg);
+                showError(msg);
+                alert('알림: ' + msg);
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                await handleRegister(event);
+            } catch (error) {
+                console.error('가입 버튼 클릭 오류:', error);
+                let errorMsg = '가입 처리 중 오류가 발생했습니다.';
+                
+                if (error.message) {
+                    errorMsg = error.message;
+                } else if (error.toString) {
+                    errorMsg = error.toString();
+                }
+                
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
+            } finally {
+                showLoading(false);
+            }
+        };
+        
         window.handleRegister = async function handleRegister(event) {
             try {
                 if (event) {
@@ -2212,38 +2251,56 @@
             const storeDescription = document.getElementById('registerStoreDescription').value.trim();
             
             if (!name || !username || !password || !passwordConfirm) {
-                showError('모든 필드를 입력해주세요.');
+                const errorMsg = '모든 필드를 입력해주세요. (성명, 아이디, 비밀번호, 비밀번호 확인)';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
             if (username.length < 3) {
-                showError('아이디는 3자 이상이어야 합니다.');
+                const errorMsg = '아이디는 3자 이상이어야 합니다.';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
             if (password.length < 4) {
-                showError('비밀번호는 4자 이상이어야 합니다.');
+                const errorMsg = '비밀번호는 4자 이상이어야 합니다.';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
             if (password !== passwordConfirm) {
-                showError('비밀번호가 일치하지 않습니다.');
+                const errorMsg = '비밀번호가 일치하지 않습니다.';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
             if (!storeName || !storeCategory || !storeAddress) {
-                showError('가게 정보를 모두 입력해주세요.');
+                const errorMsg = '가게 정보를 모두 입력해주세요. (상호, 분류, 주소는 필수입니다)';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
             if (!storeLatitude || !storeLongitude || isNaN(storeLatitude) || isNaN(storeLongitude)) {
-                showError('주소 검색을 통해 위치를 설정해주세요.');
+                const errorMsg = '주소 검색을 통해 위치를 설정해주세요. (위도/경도가 필요합니다)';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 isRegistering = false;
+                showLoading(false);
                 return;
             }
             
