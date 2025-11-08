@@ -277,30 +277,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             });
         }
         
-        // 새 임시 비밀번호 생성 (영문 대소문자 + 숫자, 12자리)
-        const generateTempPassword = () => {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let password = '';
-            for (let i = 0; i < 12; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return password;
-        };
-        const tempPassword = generateTempPassword();
-        const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
-        
-        console.log('임시 비밀번호 생성 완료:', {
-            userId: user.id,
-            username: user.username
-        });
-        
-        // 비밀번호 업데이트 (임시 비밀번호 플래그 설정)
-        await dbModule.updateUserPassword(db, user.id, tempPasswordHash, true);
-        
-        // 해시 검증 테스트
-        const verifyHash = await bcrypt.compare(tempPassword, tempPasswordHash);
-        console.log('임시 비밀번호 해시 검증:', verifyHash ? '성공' : '실패');
-        
         // 이메일 설정 확인 (보안상 필수)
         const emailUser = process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '';
         const emailPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.trim() : '';
@@ -319,6 +295,50 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             emailPassHasSpecialChars: /[^a-zA-Z0-9]/.test(trimmedPass)
         });
         
+        if (!trimmedUser || !trimmedPass) {
+            console.log('⚠️ 이메일 설정이 없어 비밀번호 찾기 기능을 사용할 수 없습니다.');
+            console.log('   .env 파일에 EMAIL_USER와 EMAIL_PASS를 설정하세요.');
+            console.log('   Gmail 앱 비밀번호 생성: https://support.google.com/accounts/answer/185833');
+            return res.status(503).json({ 
+                success: false, 
+                error: '이메일 서버가 설정되지 않아 비밀번호 찾기 기능을 사용할 수 없습니다.\n\n설정 방법:\n1. store 폴더의 .env 파일 열기\n2. EMAIL_USER=your-email@gmail.com 입력\n3. EMAIL_PASS=your-app-password 입력\n4. 서버 재시작\n\nGmail 앱 비밀번호 생성: https://support.google.com/accounts/answer/185833' 
+            });
+        }
+        
+        // 새 임시 비밀번호 생성 (영문 대소문자 + 숫자, 12자리)
+        const generateTempPassword = () => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let password = '';
+            for (let i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        };
+        const tempPassword = generateTempPassword();
+        const tempPasswordHash = await bcrypt.hash(tempPassword, 10);
+        
+        console.log('임시 비밀번호 생성 완료:', {
+            userId: user.id,
+            username: user.username
+        });
+        
+        const previousPasswordHash = user.password;
+        const previousTempFlag = user.is_temp_password === 1;
+        
+        try {
+            await dbModule.updateUserPassword(db, user.id, tempPasswordHash, true);
+        } catch (updateError) {
+            console.error('임시 비밀번호 업데이트 오류:', updateError);
+            return res.status(500).json({ 
+                success: false, 
+                error: '임시 비밀번호를 설정하지 못했습니다. 잠시 후 다시 시도해주세요.' 
+            });
+        }
+        
+        // 해시 검증 테스트
+        const verifyHash = await bcrypt.compare(tempPassword, tempPasswordHash);
+        console.log('임시 비밀번호 해시 검증:', verifyHash ? '성공' : '실패');
+        
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             host: 'smtp.gmail.com',
@@ -335,16 +355,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             greetingTimeout: 10000,   // 10초
             socketTimeout: 15000      // 15초
         });
-        
-        if (!emailUser || !emailPass) {
-            console.log('⚠️ 이메일 설정이 없어 비밀번호 찾기 기능을 사용할 수 없습니다.');
-            console.log('   .env 파일에 EMAIL_USER와 EMAIL_PASS를 설정하세요.');
-            console.log('   Gmail 앱 비밀번호 생성: https://support.google.com/accounts/answer/185833');
-            return res.status(503).json({ 
-                success: false, 
-                error: '이메일 서버가 설정되지 않아 비밀번호 찾기 기능을 사용할 수 없습니다.\n\n설정 방법:\n1. store 폴더의 .env 파일 열기\n2. EMAIL_USER=your-email@gmail.com 입력\n3. EMAIL_PASS=your-app-password 입력\n4. 서버 재시작\n\nGmail 앱 비밀번호 생성: https://support.google.com/accounts/answer/185833' 
-            });
-        }
         
         // 이메일 전송
         try {
@@ -388,6 +398,14 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 response: emailError.response,
                 responseCode: emailError.responseCode
             });
+            
+            // 이메일 전송 실패 시 기존 비밀번호로 롤백
+            try {
+                await dbModule.updateUserPassword(db, user.id, previousPasswordHash, previousTempFlag);
+                console.log('임시 비밀번호 롤백 완료:', { userId: user.id });
+            } catch (rollbackError) {
+                console.error('임시 비밀번호 롤백 실패:', rollbackError);
+            }
             
             let errorMessage = '이메일 전송에 실패했습니다.';
             
