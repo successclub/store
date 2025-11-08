@@ -330,7 +330,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             },
             tls: {
                 rejectUnauthorized: false
-            }
+            },
+            connectionTimeout: 10000, // 10초
+            greetingTimeout: 10000,   // 10초
+            socketTimeout: 15000      // 15초
         });
         
         if (!emailUser || !emailPass) {
@@ -350,10 +353,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 to: email,
                 user: user.username
             });
-            
-            // 연결 테스트
-            await transporter.verify();
-            console.log('✅ SMTP 서버 연결 확인 완료');
             
             const mailOptions = {
                 from: emailUser,
@@ -395,6 +394,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             // 구체적인 오류 메시지 제공
             if (emailError.code === 'EAUTH' || emailError.responseCode === 535) {
                 errorMessage = 'Gmail 인증에 실패했습니다.\n\n확인 사항:\n1. Google 계정 → 보안 → 2단계 인증이 활성화되어 있는지 확인\n2. 앱 비밀번호가 올바른지 확인 (16자리, 공백 없이)\n3. 앱 비밀번호 재생성: https://myaccount.google.com/apppasswords\n   - "앱 선택" → "기타(맞춤 이름)" → "메일" 입력\n   - 생성된 16자리 비밀번호를 복사 (공백 제거)\n4. .env 파일 확인:\n   - EMAIL_USER=your-email@gmail.com (정확한 이메일 주소)\n   - EMAIL_PASS=앱비밀번호16자리 (공백 없이)\n5. 서버 재시작\n\n참고: 앱 비밀번호는 Google 계정 비밀번호가 아닙니다!';
+            } else if (emailError.code === 'ETIMEDOUT' || emailError.code === 'ECONNECTION' || emailError.code === 'ESOCKET' || emailError.code === 'ECONNRESET') {
+                errorMessage = '이메일 서버 연결이 지연되거나 실패했습니다.\n\n확인 사항:\n1. 네트워크 연결 및 방화벽을 확인하세요.\n2. Railway Variables에 EMAIL_USER/EMAIL_PASS가 정확히 설정되었는지 확인하세요.\n3. Gmail Security에서 2단계 인증과 앱 비밀번호가 활성화되어 있는지 확인하세요.\n4. 문제가 계속되면 새 앱 비밀번호를 발급받아 다시 설정하세요.';
             } else if (emailError.code === 'ECONNECTION') {
                 errorMessage = '이메일 서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
             } else if (emailError.response) {
