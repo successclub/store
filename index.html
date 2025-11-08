@@ -730,7 +730,7 @@
                 <div class="form-group">
                     <label>주소 *</label>
                     <input type="text" id="userInfoStoreAddress" required placeholder="주소를 입력하세요">
-                    <button type="button" class="btn btn-secondary" onclick="searchAddressFromUserInfoModal()" style="margin-top: 10px; width: 100%;">주소 검색</button>
+                    <button type="button" class="btn btn-secondary" onclick="searchAddressFromUserInfoModal()" style="margin-top: 10px; width: 100%;">주소 검색을 클릭해 주세요</button>
                 </div>
                 <div class="form-group" style="display: none;">
                     <label>도로명 주소</label>
@@ -2548,39 +2548,118 @@
         // 사용자 정보 모달에서 주소 검색
         async function searchAddressFromUserInfoModal() {
             const addressInput = document.getElementById('userInfoStoreAddress');
+            if (!addressInput) {
+                showError('주소 입력 필드를 찾을 수 없습니다.');
+                return;
+            }
+
             const address = addressInput.value.trim();
-            
             if (!address) {
                 showError('주소를 입력해주세요.');
                 return;
             }
-            
-            await searchAddress(address);
-            
-            // 검색 결과를 사용자 정보 모달 필드에 자동 입력
-            setTimeout(() => {
+
+            if (!map || typeof kakao === 'undefined' || !kakao.maps) {
+                showError('지도가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const kakaoResult = await searchAddressWithKakao(address);
+                if (!kakaoResult || !kakaoResult.lat || !kakaoResult.lng) {
+                    showLoading(false);
+                    showError('주소를 찾을 수 없습니다. 다른 주소를 입력해주세요.');
+                    return;
+                }
+
+                const lat = kakaoResult.lat;
+                const lng = kakaoResult.lng;
+                const displayAddress = kakaoResult.displayAddress;
+                const roadAddress = kakaoResult.roadAddress;
+                const jibunAddress = kakaoResult.jibunAddress;
+
                 const latInput = document.getElementById('userInfoStoreLatitude');
                 const lngInput = document.getElementById('userInfoStoreLongitude');
                 const roadAddressInput = document.getElementById('userInfoStoreRoadAddress');
                 const lotAddressInput = document.getElementById('userInfoStoreLotAddress');
-                
-                if (latInput && lngInput && document.getElementById('storeLatitude') && document.getElementById('storeLongitude')) {
-                    latInput.value = document.getElementById('storeLatitude').value;
-                    lngInput.value = document.getElementById('storeLongitude').value;
+
+                if (latInput) {
+                    latInput.value = lat.toFixed(6);
                 }
-                
-                if (roadAddressInput && document.getElementById('storeRoadAddress')) {
-                    roadAddressInput.value = document.getElementById('storeRoadAddress').value;
+                if (lngInput) {
+                    lngInput.value = lng.toFixed(6);
                 }
-                
-                if (lotAddressInput && document.getElementById('storeLotAddress')) {
-                    lotAddressInput.value = document.getElementById('storeLotAddress').value;
+                if (roadAddressInput) {
+                    roadAddressInput.value = roadAddress || '';
                 }
-                
-                if (addressInput && document.getElementById('storeAddress')) {
-                    addressInput.value = document.getElementById('storeAddress').value;
+                if (lotAddressInput) {
+                    lotAddressInput.value = jibunAddress || '';
                 }
-            }, 500);
+
+                addressInput.value = roadAddress || jibunAddress || displayAddress;
+
+                if (searchMarker) {
+                    searchMarker.setMap(null);
+                    searchMarker = null;
+                }
+
+                const markerPosition = new kakao.maps.LatLng(lat, lng);
+
+                const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+                    <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#ff0000" stroke="#ffffff" stroke-width="3"/>
+                    </svg>
+                `);
+
+                const imageSize = new kakao.maps.Size(24, 24);
+                const imageOption = { offset: new kakao.maps.Point(12, 12) };
+                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+
+                searchMarker = new kakao.maps.Marker({
+                    position: markerPosition,
+                    image: markerImage
+                });
+
+                searchMarker.setMap(map);
+
+                const storeNameInput = document.getElementById('userInfoStoreName');
+                const storeName = storeNameInput ? storeNameInput.value.trim() : '검색 위치';
+
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 8px; min-width: 200px; text-align: center;">
+                            <div style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">📍 ${escapeHtml(storeName)}</div>
+                            <div style="font-size: 12px; color: #666;">${escapeHtml(displayAddress)}</div>
+                            ${roadAddress && roadAddress !== displayAddress ? `<div style="font-size: 11px; color: #888; margin-top: 3px;">도로명: ${escapeHtml(roadAddress)}</div>` : ''}
+                            ${jibunAddress && jibunAddress !== displayAddress && jibunAddress !== roadAddress ? `<div style="font-size: 11px; color: #888; margin-top: 3px;">지번: ${escapeHtml(jibunAddress)}</div>` : ''}
+                        </div>
+                    `
+                });
+
+                infowindow.open(map, searchMarker);
+
+                map.setCenter(markerPosition);
+                map.setLevel(3);
+
+                showLoading(false);
+                const errorMsg = document.getElementById('errorMessage');
+                if (errorMsg) {
+                    errorMsg.textContent = '주소 검색 완료! 위도/경도가 자동으로 입력되었습니다.';
+                    errorMsg.style.color = '#28a745';
+                    errorMsg.classList.add('active');
+                    setTimeout(() => {
+                        errorMsg.classList.remove('active');
+                        errorMsg.style.color = '#ffffff';
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('주소 검색 오류:', error);
+                showLoading(false);
+                showError('주소 검색 중 오류가 발생했습니다: ' + error.message);
+            }
         }
 
         // 사용자 정보 모달 열기
