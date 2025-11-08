@@ -522,7 +522,6 @@
                         <input type="password" id="loginPassword" placeholder="비밀번호" style="padding: 8px 12px; border: none; border-radius: 15px; font-size: 0.85rem; width: 100px; background: rgba(255,255,255,0.9); color: #333;">
                         <button onclick="handleLogin()" style="padding: 8px 16px; border: none; border-radius: 15px; background: rgba(255,255,255,0.9); color: #667eea; font-weight: 600; font-size: 0.85rem; cursor: pointer;">로그인</button>
                         <button onclick="openRegisterModal()" style="padding: 8px 16px; border: 1px solid rgba(255,255,255,0.5); border-radius: 15px; background: rgba(255,255,255,0.2); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer;">가게 추가</button>
-                        <button onclick="openForgotPasswordModal()" style="padding: 8px 16px; border: 1px solid rgba(255,255,255,0.5); border-radius: 15px; background: rgba(255,255,255,0.2); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer;">비밀번호 찾기</button>
                     </div>
                 </div>
             </div>
@@ -764,32 +763,6 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeUserInfoModal()">취소</button>
                     <button type="submit" class="btn btn-primary">저장</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 비밀번호 찾기 모달 -->
-    <div class="modal" id="forgotPasswordModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>비밀번호 찾기</h2>
-                <button class="close-btn" onclick="closeForgotPasswordModal()">&times;</button>
-            </div>
-            <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)" novalidate>
-                <div class="form-group">
-                    <label style="color: #fff;">가입시 등록한 이메일 주소</label>
-                    <input type="email" id="forgotPasswordEmail" required placeholder="example@email.com" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; outline: none;">
-                </div>
-                <p style="color: #fff; font-size: 0.9rem; margin-bottom: 20px;">
-                    가입 시 등록한 이메일 주소를 입력해주세요.<br>
-                    입력하신 이메일 주소로 임시 비밀번호를 전송합니다.<br>
-                    <strong style="color: #9b59b6;">보안을 위해 이메일 인증이 필수입니다.</strong><br>
-                    로그인 후 비밀번호를 변경해주세요.
-                </p>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeForgotPasswordModal()">취소</button>
-                    <button type="submit" class="btn btn-primary">전송</button>
                 </div>
             </form>
         </div>
@@ -2187,10 +2160,7 @@
             
             // 중복 실행 방지
             if (isRegistering) {
-                const msg = '이미 처리 중입니다. 잠시 후 다시 시도해주세요.';
-                console.log(msg);
-                showError(msg);
-                alert('알림: ' + msg);
+                console.log('이미 회원가입 처리가 진행 중입니다. 추가 요청을 무시합니다.');
                 return;
             }
             
@@ -2236,10 +2206,7 @@
                 
                 // 중복 실행 방지
                 if (isRegistering) {
-                    console.log('이미 회원가입 처리 중입니다. 중복 실행 방지');
-                    const msg = '이미 처리 중입니다. 잠시 후 다시 시도해주세요.';
-                    showError(msg);
-                    alert(msg);
+                    console.log('이미 회원가입 처리 중입니다. 추가 요청을 무시합니다.');
                     return;
                 }
                 
@@ -3020,67 +2987,6 @@
             });
         });
 
-        // 비밀번호 찾기 모달 열기
-        function openForgotPasswordModal() {
-            document.getElementById('forgotPasswordForm').reset();
-            document.getElementById('forgotPasswordModal').classList.add('active');
-        }
-
-        // 비밀번호 찾기 모달 닫기
-        function closeForgotPasswordModal() {
-            document.getElementById('forgotPasswordModal').classList.remove('active');
-            document.getElementById('forgotPasswordForm').reset();
-        }
-
-        // 비밀번호 찾기 처리
-        async function handleForgotPassword(event) {
-            event.preventDefault();
-            const email = document.getElementById('forgotPasswordEmail').value.trim();
-            
-            if (!email) {
-                const errorMsg = '이메일을 입력해주세요.';
-                showError(errorMsg);
-                alert('오류: ' + errorMsg);
-                return;
-            }
-            
-            try {
-                showLoading(true);
-                const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ email })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert(result.message || '입력하신 이메일로 임시 비밀번호를 전송했습니다. 이메일을 확인해주세요.');
-                    closeForgotPasswordModal();
-                } else {
-                    const errorMsg = result.error || '비밀번호 찾기에 실패했습니다.';
-                    showError(errorMsg);
-                    alert('오류: ' + errorMsg);
-                }
-            } catch (error) {
-                console.error('비밀번호 찾기 오류:', error);
-                const errorMsg = '비밀번호 찾기 중 오류가 발생했습니다.';
-                showError(errorMsg);
-                alert('오류: ' + errorMsg);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // 비밀번호 찾기 모달 외부 클릭 시 닫기
-        document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeForgotPasswordModal();
-            }
-        });
     </script>
 </body>
 </html>
