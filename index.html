@@ -631,7 +631,7 @@
                 <div class="form-group">
                     <label>주소 *</label>
                     <input type="text" id="registerStoreAddress" required placeholder="주소를 입력하세요 (예: 서울시 강남구 테헤란로 123 또는 서울시 강남구 역삼동 123-45)">
-                    <button type="button" class="btn btn-secondary" onclick="searchAddressFromRegisterModal()" style="margin-top: 10px; width: 100%;">주소 검색</button>
+                    <button type="button" class="btn btn-secondary" onclick="searchAddressFromRegisterModal()" style="margin-top: 10px; width: 100%;">주소 검색을 클릭해 주세요</button>
                 </div>
                 <div class="form-group" style="display: none;">
                     <label>도로명 주소</label>
@@ -3038,7 +3038,9 @@
             const email = document.getElementById('forgotPasswordEmail').value.trim();
             
             if (!email) {
-                showError('이메일을 입력해주세요.');
+                const errorMsg = '이메일을 입력해주세요.';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
                 return;
             }
             
@@ -3059,11 +3061,15 @@
                     alert(result.message || '입력하신 이메일로 임시 비밀번호를 전송했습니다. 이메일을 확인해주세요.');
                     closeForgotPasswordModal();
                 } else {
-                    showError(result.error || '비밀번호 찾기에 실패했습니다.');
+                    const errorMsg = result.error || '비밀번호 찾기에 실패했습니다.';
+                    showError(errorMsg);
+                    alert('오류: ' + errorMsg);
                 }
             } catch (error) {
                 console.error('비밀번호 찾기 오류:', error);
-                showError('비밀번호 찾기 중 오류가 발생했습니다.');
+                const errorMsg = '비밀번호 찾기 중 오류가 발생했습니다.';
+                showError(errorMsg);
+                alert('오류: ' + errorMsg);
             } finally {
                 showLoading(false);
             }

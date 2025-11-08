@@ -270,10 +270,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         const user = await dbModule.getUserByEmail(db, email);
         
         if (!user) {
-            // 보안을 위해 사용자가 없어도 성공 메시지 반환
-            return res.json({ 
-                success: true, 
-                message: '입력하신 이메일로 비밀번호 정보를 전송했습니다.' 
+            console.warn('비밀번호 찾기 요청 - 이메일 미등록:', email);
+            return res.status(404).json({ 
+                success: false, 
+                error: '입력하신 이메일로 등록된 계정이 없습니다. 가입 시 입력한 이메일을 확인해주세요.' 
             });
         }
         
