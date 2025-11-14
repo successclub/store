@@ -449,8 +449,54 @@
         }
 
         @media (max-width: 480px) {
+            .header {
+                padding: 15px !important;
+            }
+
+            .header-top {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 15px !important;
+            }
+
             .header h1 {
-                font-size: 1.3rem;
+                font-size: 1.2rem !important;
+            }
+
+            .header-top > div:last-child {
+                width: 100% !important;
+            }
+
+            .header-top > div:last-child > div {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+
+            #loginForm {
+                flex-wrap: wrap !important;
+                width: 100% !important;
+            }
+
+            #loginForm input {
+                flex: 1 !important;
+                min-width: 80px !important;
+                width: auto !important;
+            }
+
+            #loginForm button {
+                flex: 1 !important;
+                min-width: 100px !important;
+            }
+
+            #userInfo {
+                flex-wrap: wrap !important;
+                width: 100% !important;
+            }
+
+            #userInfo button {
+                flex: 1 !important;
+                min-width: 80px !important;
             }
 
             .search-input {
