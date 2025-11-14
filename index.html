@@ -2179,8 +2179,11 @@
                 // 이벤트 리스너가 없으면 등록
                 initRegisterEventListeners();
             }
+            const registerModal = document.getElementById('registerModal');
             document.getElementById('registerForm').reset();
-            document.getElementById('registerModal').classList.add('active');
+            // 인라인 스타일 제거하여 CSS 클래스가 적용되도록 함
+            registerModal.style.display = '';
+            registerModal.classList.add('active');
         }
 
         // 회원가입 모달 닫기
@@ -2188,7 +2191,8 @@
             const registerModal = document.getElementById('registerModal');
             if (registerModal) {
                 registerModal.classList.remove('active');
-                registerModal.style.display = 'none';
+                // 인라인 스타일 제거 (CSS 클래스로만 제어)
+                registerModal.style.display = '';
             }
         }
 
