@@ -24,18 +24,28 @@ const NAVER_CLIENT_SECRET = 'aXawnwfFZJ';
 // const GOOGLE_API_KEY = '';
 
 // 세션 설정
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY === 'true';
+
+// 개발 환경에서 MemoryStore 경고 안내
+if (!isProduction) {
+    console.log('ℹ️  개발 환경: MemoryStore를 사용 중입니다. (프로덕션에서는 Redis 등 영구 저장소 권장)');
+}
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-this-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production' || process.env.RAILWAY === 'true', // Railway는 항상 HTTPS
+        secure: isProduction, // Railway는 항상 HTTPS
         httpOnly: true,
         sameSite: 'lax', // CSRF 보호 및 쿠키 전송 보장
         maxAge: 24 * 60 * 60 * 1000, // 24시간
         domain: undefined, // Railway 도메인에 맞게 자동 설정
         path: '/' // 모든 경로에서 쿠키 사용
     }
+    // store 옵션을 명시하지 않으면 기본 MemoryStore 사용
+    // 프로덕션 환경에서는 Redis 등 영구 저장소 사용 권장:
+    // store: new RedisStore({ client: redisClient })
 }));
 
 // 미들웨어
@@ -957,7 +967,10 @@ app.get('/api/search/naver', async (req, res) => {
 // 서버 시작
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
-    console.log(`로컬 접속: http://localhost:${PORT}`);
+    const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN 
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
+        : `http://localhost:${PORT}`;
+    console.log(`접속 URL: ${baseUrl}`);
 });
 
 // 서버 종료 시 데이터베이스 연결 종료

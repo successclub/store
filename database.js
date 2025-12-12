@@ -16,12 +16,17 @@ if (!fs.existsSync(defaultDbDir)) {
 // 데이터베이스 초기화 및 연결
 function initDatabase() {
     return new Promise((resolve, reject) => {
+        const dbExists = fs.existsSync(dbPath);
         const db = new sqlite3.Database(dbPath, (err) => {
             if (err) {
                 console.error('데이터베이스 연결 오류:', err);
                 reject(err);
             } else {
-                console.log('SQLite 데이터베이스에 연결되었습니다.');
+                if (dbExists) {
+                    console.log('SQLite 데이터베이스에 연결되었습니다. (기존 데이터베이스)');
+                } else {
+                    console.log('SQLite 데이터베이스에 연결되었습니다. (새 데이터베이스 생성)');
+                }
             }
         });
 
@@ -41,7 +46,7 @@ function initDatabase() {
                     reject(err);
                     return;
                 }
-                console.log('users 테이블이 준비되었습니다.');
+                console.log('✅ users 테이블 확인 완료');
                 
                 // users 테이블에 email 컬럼 추가 (마이그레이션)
                 db.run(`ALTER TABLE users ADD COLUMN email TEXT`, (err) => {
@@ -110,7 +115,7 @@ function initDatabase() {
                     }
                 });
                 
-                console.log('stores 테이블이 준비되었습니다.');
+                console.log('✅ stores 테이블 확인 완료');
                 resolve(db);
             });
         });

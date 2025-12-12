@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "production": "NODE_ENV=production node server.js"
+    "production": "NODE_ENV=production node server.js",
+    "backup": "node backup-db.js",
+    "check-db": "node check-db.js"
   },
   "engines": {
     "node": ">=14.0.0",
