@@ -930,7 +930,7 @@
                 console.error('1. https://developers.kakao.com 접속');
                 console.error('2. 내 애플리케이션 선택');
                 console.error('3. 플랫폼 설정 → Web 플랫폼 등록');
-                console.error('4. 사이트 도메인 등록: http://localhost:3000');
+                console.error(`4. 사이트 도메인 등록: ${window.location.origin}`);
                 console.error('5. JavaScript 키 확인: 6357c5a889634b07801febf524487150');
                 console.error('6. 등록 후 5-10분 대기 후 페이지 새로고침');
                 console.error('');
@@ -957,7 +957,7 @@
                             <li><strong>로그인</strong> 후 <strong>"내 애플리케이션"</strong> 메뉴 클릭</li>
                             <li>애플리케이션 선택 (없으면 새로 생성)</li>
                             <li><strong>"플랫폼"</strong> 탭 클릭 → <strong>"Web 플랫폼"</strong> 등록</li>
-                            <li><strong>사이트 도메인</strong> 입력: <code style="background: #f0f0f0; padding: 3px 8px; border-radius: 3px; font-weight: bold; color: #d63384;">http://localhost:3000</code></li>
+                            <li><strong>사이트 도메인</strong> 입력: <code style="background: #f0f0f0; padding: 3px 8px; border-radius: 3px; font-weight: bold; color: #d63384;" id="kakao-domain-placeholder">${window.location.origin}</code></li>
                             <li><strong>저장</strong> 버튼 클릭</li>
                             <li><strong>5-10분 대기</strong> 후 이 페이지 새로고침 (F5)</li>
                         </ol>
@@ -967,7 +967,7 @@
                             <ul style="margin: 5px 0 0 20px; line-height: 1.8;">
                                 <li>JavaScript 키 사용 중인지 확인 (REST API 키 아님)</li>
                                 <li>현재 키: <code style="background: #f0f0f0; padding: 2px 6px;">6357c5a889634b07801febf524487150</code></li>
-                                <li>도메인은 정확히 <code>http://localhost:3000</code> (http://, 포트 포함)</li>
+                                <li>도메인은 정확히 <code>${window.location.origin}</code> (프로토콜, 도메인, 포트 포함)</li>
                             </ul>
                         </div>
                         
@@ -1507,7 +1507,7 @@
                         console.error('1. https://developers.kakao.com 접속');
                         console.error('2. 내 애플리케이션 선택');
                         console.error('3. 플랫폼 설정 → Web 플랫폼 등록');
-                        console.error('4. 사이트 도메인 등록: http://localhost:3000');
+                        console.error(`4. 사이트 도메인 등록: ${window.location.origin}`);
                         console.error('5. JavaScript 키 확인: 6357c5a889634b07801febf524487150');
                         console.error('6. 등록 후 5-10분 대기 후 페이지 새로고침');
                         console.error('');
