@@ -1,7 +1,17 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = path.join(__dirname, 'stores.db');
+// DB 경로를 환경변수로 지정 가능하게 하고, 기본값은 프로젝트 내부 data 폴더로 고정
+// - Railway 등 배포 환경에서는 이 경로를 퍼시스턴트 볼륨에 마운트하여 데이터 초기화를 방지
+const defaultDbDir = process.env.DATABASE_DIR || path.join(__dirname, 'data');
+const dbPath = process.env.DATABASE_PATH || path.join(defaultDbDir, 'stores.db');
+
+// DB 디렉터리가 없으면 생성 (이미 존재하면 패스)
+if (!fs.existsSync(defaultDbDir)) {
+    fs.mkdirSync(defaultDbDir, { recursive: true });
+    console.log(`데이터베이스 디렉터리를 생성했습니다: ${defaultDbDir}`);
+}
 
 // 데이터베이스 초기화 및 연결
 function initDatabase() {
